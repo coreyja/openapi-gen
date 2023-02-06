@@ -10,8 +10,9 @@ mod some_site {
 
 fn main() {
     let _ = some_site::Old {};
-    let _ = some_site::New {};
-    let _ = some_site::ListVersionsv2 {};
-    let _ = some_site::TestOperation {};
+    // let _ = some_site::New {};
+
+    // let _ = some_site::Root;
+    // let _ = some_site::Foo {};
     println!("Hello, world!");
 }

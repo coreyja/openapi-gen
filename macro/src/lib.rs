@@ -1,7 +1,7 @@
 use std::fs;
 
 use darling::FromMeta;
-use openapiv3::OpenAPI;
+use openapiv3::{OpenAPI, PathItem, Paths, ReferenceOr};
 use quote::{format_ident, quote, quote_spanned};
 use syn::{parse_macro_input, parse_quote};
 
@@ -53,27 +53,105 @@ pub fn api(
         .into();
     }
 
-    item_mod.content.as_mut().unwrap().1.push(parse_quote! {
-          pub struct New {}
-    });
+    let mods = openapi.paths.to_mods();
 
-    for (path, item) in openapi.paths.into_iter() {
-        let item = item.into_item().unwrap();
-
-        if let Some(op) = item.get {
-            let mut id = op.operation_id.unwrap();
-            make_ascii_titlecase(&mut id);
-
-            let id = format_ident!("{}", id);
-
-            item_mod.content.as_mut().unwrap().1.push(parse_quote! {
-                pub struct #id {}
-            });
-        }
+    for m in mods.into_iter() {
+        item_mod
+            .content
+            .as_mut()
+            .unwrap()
+            .1
+            .push(parse_quote! { #m });
     }
+
+    // item_mod.content.as_mut().unwrap().1.push(parse_quote! {
+    //       pub struct New {}
+    // });
+
+    // for (path, item) in openapi.paths.into_iter() {
+    //     let item = item.into_item().unwrap();
+
+    //     if let Some(op) = item.get {
+    //         // let mut id = op.operation_id.unwrap();
+    //         // make_ascii_titlecase(&mut id);
+
+    //         // let id = format_ident!("{}", id);
+
+    //         // item_mod.content.as_mut().unwrap().1.push(parse_quote! {
+    //         //     pub struct #id {}
+    //         // });
+
+    //         for (code, response) in op.responses.responses.into_iter() {
+    //             let response = response.into_item().unwrap();
+    //             // let mut id = response.description.clone();
+
+    //             for (mime, media) in response.content.into_iter() {
+    //                 for (mut example_name, example) in media.examples.into_iter() {
+    //                     let example = example.into_item().unwrap();
+
+    //                     example_name = example_name.replace(' ', "");
+    //                     make_ascii_titlecase(&mut example_name);
+    //                     let id = format_ident!("{}", example_name);
+
+    //                     let example_json = example.value.unwrap();
+
+    //                     // item_mod.content.as_mut().unwrap().1.push(parse_quote! {
+    //                     //     pub struct #id {}
+    //                     // });
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     quote! {
         #item_mod
     }
     .into()
+}
+
+trait IntoMods {
+    fn to_mods(self) -> Vec<syn::ItemMod>;
+}
+
+impl IntoMods for Paths {
+    fn to_mods(self) -> Vec<syn::ItemMod> {
+        self.into_iter().map(IntoPathMod::to_path_mod).collect()
+    }
+}
+
+trait IntoPathMod {
+    fn to_path_mod(self) -> syn::ItemMod;
+}
+
+impl IntoPathMod for (String, ReferenceOr<PathItem>) {
+    fn to_path_mod(self) -> syn::ItemMod {
+        let (path, item) = self;
+        let mut path_parts: Vec<_> = path
+            .split('/')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string())
+            .collect();
+        for part in path_parts.iter_mut() {
+            make_ascii_titlecase(part);
+        }
+        let path_ident = path_parts.join("_");
+        let path_ident = if path_ident.is_empty() {
+            "Root".to_string()
+        } else {
+            path_ident
+        };
+        let path_ident = format_ident!("{}", path_ident);
+
+        // let item = item.into_item().unwrap();
+
+        // let mut id = item.get.unwrap().operation_id.unwrap();
+        // make_ascii_titlecase(&mut id);
+
+        // let id = format_ident!("{}", id);
+
+        parse_quote! {
+            pub mod #path_ident {}
+        }
+    }
 }
