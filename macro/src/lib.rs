@@ -1,19 +1,14 @@
 use std::fs;
 
+use apigen_core::IntoMods;
 use darling::FromMeta;
-use openapiv3::{OpenAPI, PathItem, Paths, ReferenceOr};
-use quote::{format_ident, quote, quote_spanned};
+use openapiv3::OpenAPI;
+use quote::{quote, quote_spanned};
 use syn::{parse_macro_input, parse_quote};
 
 #[derive(Debug, FromMeta)]
 struct MacroArgs {
     path: String,
-}
-
-fn make_ascii_titlecase(s: &mut str) {
-    if let Some(r) = s.get_mut(0..1) {
-        r.make_ascii_uppercase();
-    }
 }
 
 #[proc_macro_attribute]
@@ -64,6 +59,11 @@ pub fn api(
             .push(parse_quote! { #m });
     }
 
+    quote! {
+        #item_mod
+    }
+    .into()
+
     // item_mod.content.as_mut().unwrap().1.push(parse_quote! {
     //       pub struct New {}
     // });
@@ -103,55 +103,4 @@ pub fn api(
     //         }
     //     }
     // }
-
-    quote! {
-        #item_mod
-    }
-    .into()
-}
-
-trait IntoMods {
-    fn to_mods(self) -> Vec<syn::ItemMod>;
-}
-
-impl IntoMods for Paths {
-    fn to_mods(self) -> Vec<syn::ItemMod> {
-        self.into_iter().map(IntoPathMod::to_path_mod).collect()
-    }
-}
-
-trait IntoPathMod {
-    fn to_path_mod(self) -> syn::ItemMod;
-}
-
-impl IntoPathMod for (String, ReferenceOr<PathItem>) {
-    fn to_path_mod(self) -> syn::ItemMod {
-        let (path, item) = self;
-        let mut path_parts: Vec<_> = path
-            .split('/')
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string())
-            .collect();
-        for part in path_parts.iter_mut() {
-            make_ascii_titlecase(part);
-        }
-        let path_ident = path_parts.join("_");
-        let path_ident = if path_ident.is_empty() {
-            "Root".to_string()
-        } else {
-            path_ident
-        };
-        let path_ident = format_ident!("{}", path_ident);
-
-        // let item = item.into_item().unwrap();
-
-        // let mut id = item.get.unwrap().operation_id.unwrap();
-        // make_ascii_titlecase(&mut id);
-
-        // let id = format_ident!("{}", id);
-
-        parse_quote! {
-            pub mod #path_ident {}
-        }
-    }
 }

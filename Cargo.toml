@@ -3,4 +3,5 @@
 members = [
     "macro",
     "example",
+    "apigen-core",
 ]

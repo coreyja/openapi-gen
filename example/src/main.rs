@@ -8,11 +8,11 @@ mod some_site {
 // #[api(path = "some_site")]
 // mod test;
 
+use some_site::Root as _;
+use some_site::Test as _;
+
 fn main() {
     let _ = some_site::Old {};
-    // let _ = some_site::New {};
 
-    // let _ = some_site::Root;
-    // let _ = some_site::Foo {};
     println!("Hello, world!");
 }
