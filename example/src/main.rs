@@ -8,8 +8,8 @@ mod some_site {
 // #[api(path = "some_site")]
 // mod test;
 
-use some_site::Root as _;
-use some_site::Test as _;
+use some_site::Root::Get as _;
+use some_site::Test_More as _;
 
 fn main() {
     let _ = some_site::Old {};

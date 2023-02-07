@@ -41,15 +41,44 @@ impl IntoPathMod for (String, ReferenceOr<PathItem>) {
         };
         let path_ident = format_ident!("{}", path_ident);
 
-        // let item = item.into_item().unwrap();
+        let item = item.into_item().unwrap();
 
         // let mut id = item.get.unwrap().operation_id.unwrap();
         // make_ascii_titlecase(&mut id);
 
         // let id = format_ident!("{}", id);
 
-        parse_quote! {
+        let mut path_mod: syn::ItemMod = parse_quote! {
             pub mod #path_ident {}
+        };
+        let content = &mut path_mod.content.as_mut().unwrap().1;
+
+        if let Some(op) = item.get {
+            content.push(op.into_op_mod("get").into());
+        }
+        if let Some(op) = item.post {
+            content.push(op.into_op_mod("post").into());
+        }
+        // TODO: Need to do the rest of the operations
+        // annoying there isn't any easy loop that I found
+
+        path_mod
+    }
+}
+
+trait IntoOperationMod {
+    fn into_op_mod(self, verb: &str) -> syn::ItemMod;
+}
+
+impl IntoOperationMod for Operation {
+    fn into_op_mod(self, verb: &str) -> syn::ItemMod {
+        let mut verb = verb.to_string();
+        make_ascii_titlecase(&mut verb);
+
+        let ident = format_ident!("{verb}");
+
+        parse_quote! {
+            pub mod #ident {}
         }
     }
 }
