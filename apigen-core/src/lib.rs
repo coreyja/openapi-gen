@@ -1,6 +1,6 @@
 use openapiv3::*;
 use quote::format_ident;
-use syn::parse_quote;
+use syn::{parse_quote, ItemEnum, ItemMod, ItemStruct};
 
 fn make_ascii_titlecase(s: &mut str) {
     if let Some(r) = s.get_mut(0..1) {
@@ -77,8 +77,31 @@ impl IntoOperationMod for Operation {
 
         let ident = format_ident!("{verb}");
 
+        let op_struct: ItemStruct = parse_quote! {
+          pub struct Request {}
+        };
+
+        let mut response_enum: ItemEnum = parse_quote! {
+          #[doc="Test this Response"]
+          pub enum Response { }
+        };
+        for (status_code, resp) in self.responses.responses {
+            let resp = resp.as_item().unwrap();
+
+            response_enum.variants.push(syn::Variant {
+                attrs: vec![],
+                ident: format_ident!("_{status_code}"),
+                fields: syn::Fields::Unit,
+                discriminant: None,
+            });
+        }
+
         parse_quote! {
-            pub mod #ident {}
+          pub mod #ident {
+            #op_struct
+
+            #response_enum
+          }
         }
     }
 }
