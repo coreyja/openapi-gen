@@ -2,6 +2,7 @@ use r#macro::api;
 
 #[api(path = "src/some_site.json")]
 mod some_site {
+    /// This is a test
     pub struct Old {}
 }
 

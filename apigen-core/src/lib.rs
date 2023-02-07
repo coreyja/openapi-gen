@@ -94,7 +94,6 @@ impl IntoOperationMod for Operation {
         for (status_code, resp) in self.responses.responses {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
-            let struct_ident = format_ident!("Response{status_code}");
 
             let x = resp.content.get("application/json").unwrap().clone();
             let mut iter = x.examples.into_iter();
@@ -102,16 +101,11 @@ impl IntoOperationMod for Operation {
             let example_value = item.1.into_item();
             let example_value = example_value.unwrap().value.unwrap();
 
-            // let mut structs = vec![];
-            let ty = type_for(
-                &example_value,
-                &mut response_structs,
-                &struct_ident.to_string(),
-                0,
-            );
+            let struct_ident = format!("Response{status_code}");
+            let ty = type_for(&example_value, &mut response_structs, &struct_ident, 0);
 
             response_enum.variants.push(parse_quote! {
-              #variant_ident(#struct_ident)
+              #variant_ident(#ty)
             });
         }
 
@@ -124,10 +118,6 @@ impl IntoOperationMod for Operation {
         };
         let content = &mut x.content.as_mut().unwrap().1;
 
-        // let mut response_structs: Vec<_> = response_structs.into_iter().map(|x| x.into()).collect();
-        // {
-        //     content.append(&mut response_structs);
-        // }
         for i in response_structs {
             content.push(i.into())
         }
@@ -136,15 +126,11 @@ impl IntoOperationMod for Operation {
     }
 }
 
-fn type_for(
-    value: &Value,
-    structs: &mut Vec<ItemStruct>,
-    name: &str,
-    mut count: usize,
-) -> TokenStream {
+fn type_for(value: &Value, structs: &mut Vec<ItemStruct>, name: &str, count: usize) -> TokenStream {
     match value {
         Value::Null => quote::quote!(()),
         Value::Bool(_) => quote::quote!(bool),
+        // TODO: i64 isn't quite right here, we probably want to mess with this
         Value::Number(_) => quote::quote!(i64),
         Value::String(_) => quote::quote!(String),
         Value::Array(a) => {
