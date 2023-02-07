@@ -1,4 +1,5 @@
 use openapiv3::*;
+use proc_macro2::TokenStream;
 use quote::format_ident;
 use syn::{
     parse::Parser, parse_quote, token::Paren, Attribute, Fields, FieldsNamed, FieldsUnnamed,
@@ -93,19 +94,45 @@ impl IntoOperationMod for Operation {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
             let struct_ident = format_ident!("Response{status_code}");
+
+            let x = resp.content.get("application/json").unwrap().clone();
+            let mut iter = x.examples.into_iter();
+            let item = iter.next().unwrap();
+            let example_value = item.1.into_item();
+            let example_value = example_value.unwrap().value.unwrap();
+
             let mut res_struct: ItemStruct = parse_quote! {
               pub struct #struct_ident {}
             };
-
             if let Fields::Named(ref mut x) = res_struct.fields {
-                x.named.push(
-                    syn::Field::parse_named
-                        .parse2(quote::quote! { pub a: String })
-                        .unwrap(),
-                );
+                match example_value {
+                    serde_json::Value::Null => todo!(),
+                    serde_json::Value::Bool(_) => todo!(),
+                    serde_json::Value::Number(_) => todo!(),
+                    serde_json::Value::String(_) => todo!(),
+                    serde_json::Value::Array(_) => todo!(),
+                    serde_json::Value::Object(o) => {
+                        for (key, _value) in o.into_iter() {
+                            let key = format_ident!("{key}");
+                            // TODO: We need to map value to a type
+                            // But it needs to be recursive and also make structs
+                            // as it comes across them
+                            // I think I want a recursive method that takes a mutable reference
+                            // to a vec of structs. So that it can create a new struct, and then
+                            // use its ident
+                            let ty = format_ident!("String");
+                            x.named.push(
+                                syn::Field::parse_named
+                                    .parse2(quote::quote! { pub #key: #ty })
+                                    .unwrap(),
+                            );
+                        }
+                    }
+                };
             } else {
                 panic!("This should always be named cause we just made the struct")
             };
+
             response_structs.push(res_struct);
 
             response_enum.variants.push(parse_quote! {
