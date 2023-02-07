@@ -1,6 +1,8 @@
 use openapiv3::*;
 use quote::format_ident;
-use syn::{parse_quote, ItemEnum, ItemMod, ItemStruct};
+use syn::{
+    parse_quote, token::Paren, Attribute, FieldsUnnamed, Generics, ItemEnum, ItemMod, ItemStruct,
+};
 
 fn make_ascii_titlecase(s: &mut str) {
     if let Some(r) = s.get_mut(0..1) {
@@ -77,7 +79,7 @@ impl IntoOperationMod for Operation {
 
         let ident = format_ident!("{verb}");
 
-        let op_struct: ItemStruct = parse_quote! {
+        let request_struct: ItemStruct = parse_quote! {
           pub struct Request {}
         };
 
@@ -85,24 +87,39 @@ impl IntoOperationMod for Operation {
           #[doc="Test this Response"]
           pub enum Response { }
         };
+        let mut response_structs: Vec<ItemStruct> = vec![];
         for (status_code, resp) in self.responses.responses {
             let resp = resp.as_item().unwrap();
+            let variant_ident = format_ident!("_{status_code}");
+            let struct_ident = format_ident!("Response{status_code}");
+            let res_struct = parse_quote! {
+              pub struct #struct_ident {}
+            };
+            response_structs.push(res_struct);
 
-            response_enum.variants.push(syn::Variant {
-                attrs: vec![],
-                ident: format_ident!("_{status_code}"),
-                fields: syn::Fields::Unit,
-                discriminant: None,
+            response_enum.variants.push(parse_quote! {
+              #variant_ident(#struct_ident)
             });
         }
 
-        parse_quote! {
+        let mut x: ItemMod = parse_quote! {
           pub mod #ident {
-            #op_struct
+            #request_struct
 
             #response_enum
           }
+        };
+        let content = &mut x.content.as_mut().unwrap().1;
+
+        // let mut response_structs: Vec<_> = response_structs.into_iter().map(|x| x.into()).collect();
+        // {
+        //     content.append(&mut response_structs);
+        // }
+        for i in response_structs {
+            content.push(i.into())
         }
+
+        x
     }
 }
 

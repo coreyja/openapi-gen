@@ -15,7 +15,8 @@ fn main() {
     let _ = some_site::Old {};
 
     let _ = some_site::Root::Get::Request {};
-    let _ = some_site::Root::Get::Response::_200;
+    let x = some_site::Root::Get::Response200 {};
+    let _ = some_site::Root::Get::Response::_200(x);
 
     println!("Hello, world!");
 }
