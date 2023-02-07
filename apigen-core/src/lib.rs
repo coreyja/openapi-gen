@@ -135,10 +135,12 @@ fn type_for(value: &Value, structs: &mut Vec<ItemStruct>, name: &str, count: usi
         Value::String(_) => quote::quote!(String),
         Value::Array(a) => {
             let sample = a.iter().next();
-            match sample {
+            let ty = match sample {
                 Some(v) => type_for(v, structs, name, count),
                 None => todo!("What do we do with empty arrays?"),
-            }
+            };
+
+            quote::quote!(Vec<#ty>)
         }
         Value::Object(o) => {
             let ident = if count == 0 {
