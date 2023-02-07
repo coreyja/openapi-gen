@@ -1,6 +1,7 @@
 use openapiv3::*;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::format_ident;
+use serde_json::Value;
 use syn::{
     parse::Parser, parse_quote, token::Paren, Attribute, Fields, FieldsNamed, FieldsUnnamed,
     Generics, ItemEnum, ItemMod, ItemStruct, VisPublic,
@@ -101,39 +102,13 @@ impl IntoOperationMod for Operation {
             let example_value = item.1.into_item();
             let example_value = example_value.unwrap().value.unwrap();
 
-            let mut res_struct: ItemStruct = parse_quote! {
-              pub struct #struct_ident {}
-            };
-            if let Fields::Named(ref mut x) = res_struct.fields {
-                match example_value {
-                    serde_json::Value::Null => todo!(),
-                    serde_json::Value::Bool(_) => todo!(),
-                    serde_json::Value::Number(_) => todo!(),
-                    serde_json::Value::String(_) => todo!(),
-                    serde_json::Value::Array(_) => todo!(),
-                    serde_json::Value::Object(o) => {
-                        for (key, _value) in o.into_iter() {
-                            let key = format_ident!("{key}");
-                            // TODO: We need to map value to a type
-                            // But it needs to be recursive and also make structs
-                            // as it comes across them
-                            // I think I want a recursive method that takes a mutable reference
-                            // to a vec of structs. So that it can create a new struct, and then
-                            // use its ident
-                            let ty = format_ident!("String");
-                            x.named.push(
-                                syn::Field::parse_named
-                                    .parse2(quote::quote! { pub #key: #ty })
-                                    .unwrap(),
-                            );
-                        }
-                    }
-                };
-            } else {
-                panic!("This should always be named cause we just made the struct")
-            };
-
-            response_structs.push(res_struct);
+            // let mut structs = vec![];
+            let ty = type_for(
+                &example_value,
+                &mut response_structs,
+                &struct_ident.to_string(),
+                0,
+            );
 
             response_enum.variants.push(parse_quote! {
               #variant_ident(#struct_ident)
@@ -158,6 +133,58 @@ impl IntoOperationMod for Operation {
         }
 
         x
+    }
+}
+
+fn type_for(
+    value: &Value,
+    structs: &mut Vec<ItemStruct>,
+    name: &str,
+    mut count: usize,
+) -> TokenStream {
+    match value {
+        Value::Null => quote::quote!(()),
+        Value::Bool(_) => quote::quote!(bool),
+        Value::Number(_) => quote::quote!(i64),
+        Value::String(_) => quote::quote!(String),
+        Value::Array(a) => {
+            let sample = a.iter().next();
+            match sample {
+                Some(v) => type_for(v, structs, name, count),
+                None => todo!("What do we do with empty arrays?"),
+            }
+        }
+        Value::Object(o) => {
+            let ident = if count == 0 {
+                name.to_string()
+            } else {
+                format!("{name}_{count}")
+            };
+            let ident = format_ident!("{ident}");
+            let mut s: ItemStruct = parse_quote! {
+              pub struct #ident {}
+            };
+
+            if let Fields::Named(ref mut x) = s.fields {
+                for (key, value) in o.into_iter() {
+                    let ty = type_for(value, structs, name, count + 1);
+
+                    let key = format_ident!("{key}");
+
+                    x.named.push(
+                        syn::Field::parse_named
+                            .parse2(quote::quote! { pub #key: #ty })
+                            .unwrap(),
+                    );
+                }
+            } else {
+                panic!("This should always be named cause we just made the struct")
+            };
+
+            structs.push(s);
+
+            quote::quote!(#ident)
+        }
     }
 }
 
