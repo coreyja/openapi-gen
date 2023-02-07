@@ -1,7 +1,8 @@
 use openapiv3::*;
 use quote::format_ident;
 use syn::{
-    parse_quote, token::Paren, Attribute, FieldsUnnamed, Generics, ItemEnum, ItemMod, ItemStruct,
+    parse::Parser, parse_quote, token::Paren, Attribute, Fields, FieldsNamed, FieldsUnnamed,
+    Generics, ItemEnum, ItemMod, ItemStruct, VisPublic,
 };
 
 fn make_ascii_titlecase(s: &mut str) {
@@ -92,8 +93,18 @@ impl IntoOperationMod for Operation {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
             let struct_ident = format_ident!("Response{status_code}");
-            let res_struct = parse_quote! {
+            let mut res_struct: ItemStruct = parse_quote! {
               pub struct #struct_ident {}
+            };
+
+            if let Fields::Named(ref mut x) = res_struct.fields {
+                x.named.push(
+                    syn::Field::parse_named
+                        .parse2(quote::quote! { pub a: String })
+                        .unwrap(),
+                );
+            } else {
+                panic!("This should always be named cause we just made the struct")
             };
             response_structs.push(res_struct);
 
