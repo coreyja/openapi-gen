@@ -1,14 +1,9 @@
-use r#macro::api;
+use openapi_gen_macro::api;
 
 #[api(path = "src/some_site.json")]
-mod some_site {
-    /// This is a test
-    pub struct Old {}
-}
+mod some_site {}
 
 fn main() {
-    let _ = some_site::Old {};
-
     let _ = some_site::Root::Get::Request {};
     let x = some_site::Root::Get::Response200 {
         versions: vec![some_site::Root::Get::Response200_1 {

@@ -1,9 +1,9 @@
 [package]
-name = "example"
+name = "usage-example"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macro = { path = "../macro" }
+openapi-gen-macro = { path = "../openapi-gen-macro" }

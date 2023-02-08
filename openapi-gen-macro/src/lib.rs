@@ -1,7 +1,7 @@
 use std::fs;
 
-use apigen_core::IntoMods;
 use darling::FromMeta;
+use openapi_gen_core::IntoMods;
 use openapiv3::OpenAPI;
 use quote::{quote, quote_spanned};
 use syn::{parse_macro_input, parse_quote};
