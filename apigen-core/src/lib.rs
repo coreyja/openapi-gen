@@ -1,11 +1,8 @@
 use openapiv3::*;
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use quote::format_ident;
 use serde_json::Value;
-use syn::{
-    parse::Parser, parse_quote, token::Paren, Attribute, Fields, FieldsNamed, FieldsUnnamed,
-    Generics, ItemEnum, ItemMod, ItemStruct, VisPublic,
-};
+use syn::{parse::Parser, parse_quote, Fields, ItemEnum, ItemMod, ItemStruct};
 
 fn make_ascii_titlecase(s: &mut str) {
     if let Some(r) = s.get_mut(0..1) {
