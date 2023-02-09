@@ -10,6 +10,25 @@
         "operationId": "testOperation",
         "summary": "Test summary",
         "description": "Test description",
+        "parameters": [
+          {
+            "name": "test",
+            "in": "query",
+            "description": "Test parameter",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "foo": {
+                  "type": "string"
+                },
+                "bar": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "200 response",
