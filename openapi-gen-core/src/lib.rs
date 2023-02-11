@@ -1,10 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs};
 
+use darling::FromMeta;
 use openapiv3::*;
 use proc_macro2::TokenStream;
-use quote::format_ident;
+use quote::{format_ident, quote, quote_spanned};
 use serde_json::Value;
 use syn::{parse::Parser, parse_quote, Fields, ItemEnum, ItemMod, ItemStruct};
+
+pub use darling;
+pub use syn;
 
 fn make_ascii_titlecase(s: &mut str) {
     if let Some(r) = s.get_mut(0..1) {
@@ -323,6 +327,53 @@ fn type_for(
     let openapi_type = type_for_value(value);
 
     into_type(&openapi_type, new_structs, name, count)
+}
+
+#[derive(Debug, FromMeta)]
+pub struct MacroArgs {
+    path: String,
+}
+
+pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    let mut item_mod = match syn::parse2::<syn::ItemMod>(input) {
+        Ok(syntax_tree) => syntax_tree,
+        Err(err) => return err.to_compile_error(),
+    };
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let path = format!("{}/{}", manifest_dir, args.path);
+    let contents = fs::read_to_string(path);
+    if contents.is_err() {
+        return quote_spanned! {
+          item_mod.ident.span() =>
+            compile_error!("File not found");
+        };
+    }
+    let contents = contents.unwrap();
+
+    let openapi: OpenAPI = serde_json::from_str(&contents).expect("Could not deserialize input");
+
+    if item_mod.content.is_none() {
+        return quote_spanned! {
+          item_mod.ident.span() =>
+            compile_error!("Non-inline modules are not supported")
+        };
+    }
+
+    let mods = openapi.paths.to_mods();
+
+    for m in mods.into_iter() {
+        item_mod
+            .content
+            .as_mut()
+            .unwrap()
+            .1
+            .push(parse_quote! { #m });
+    }
+
+    quote! {
+        #item_mod
+    }
 }
 
 #[cfg(test)]
