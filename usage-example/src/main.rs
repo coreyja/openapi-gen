@@ -5,7 +5,10 @@ mod some_site {}
 
 fn main() {
     let _ = some_site::Test_More::Get::QueryParams {
-        test: "1".to_string(),
+        test: some_site::Test_More::Get::InnerParam {
+            foo: "bar".to_string(),
+            bar: "foo".to_string(),
+        },
     };
     let _ = some_site::Root::Get::Request {};
     let x = some_site::Root::Get::Response200 {

@@ -75,17 +75,11 @@ trait IntoOperationMod {
 }
 
 trait IntoType {
-    fn into_type(&self, new_structs: &mut Vec<ItemStruct>, name: &str, count: usize)
-        -> TokenStream;
+    fn as_type(&self, new_structs: &mut Vec<ItemStruct>, name: &str, count: usize) -> TokenStream;
 }
 
 impl IntoType for Schema {
-    fn into_type(
-        &self,
-        new_structs: &mut Vec<ItemStruct>,
-        name: &str,
-        count: usize,
-    ) -> TokenStream {
+    fn as_type(&self, new_structs: &mut Vec<ItemStruct>, name: &str, count: usize) -> TokenStream {
         match &self.schema_kind {
             SchemaKind::Type(t) => into_type(t, new_structs, name, count),
             SchemaKind::OneOf { .. } => todo!("Generate an enum from the possible schemas"),
@@ -125,7 +119,7 @@ fn into_type(t: &Type, new_structs: &mut Vec<ItemStruct>, name: &str, count: usi
                 for (key, value) in o.properties.iter() {
                     let s = value.as_item().unwrap();
 
-                    let ty = s.into_type(new_structs, name, count + 1);
+                    let ty = s.as_type(new_structs, name, count + 1);
 
                     let key = format_ident!("{key}");
 
@@ -149,7 +143,7 @@ fn into_type(t: &Type, new_structs: &mut Vec<ItemStruct>, name: &str, count: usi
                 Some(s) => {
                     let s = s.as_item().unwrap();
 
-                    s.into_type(new_structs, name, count + 1)
+                    s.as_type(new_structs, name, count + 1)
                 }
                 None => todo!("What do we do with empty arrays?"),
             };
@@ -214,8 +208,8 @@ impl IntoOperationMod for Operation {
                         if let ParameterSchemaOrContent::Schema(s) = parameter_data.format {
                             let s = s.into_item().unwrap();
 
-                            let struct_name = format!("QueryParams_Schema");
-                            let ty = s.into_type(&mut structs, &struct_name, 0);
+                            let struct_name = "InnerParam";
+                            let ty = s.as_type(&mut structs, struct_name, 0);
 
                             fields.named.push(
                                 syn::Field::parse_named
