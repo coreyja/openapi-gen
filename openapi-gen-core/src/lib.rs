@@ -331,7 +331,7 @@ fn type_for(
 
 #[derive(Debug, FromMeta)]
 pub struct MacroArgs {
-    path: String,
+    pub path: String,
 }
 
 pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
@@ -382,13 +382,13 @@ mod test {
 
     #[test]
     fn test_path_mod_names() {
-        let spec_string = include_str!("../../usage-example/src/some_site.json");
+        let spec_string = include_str!("../tests/simple_site.json");
         let spec: OpenAPI = serde_json::from_str(spec_string).unwrap();
 
         let paths = spec.paths;
         let mods = paths.to_mods();
 
         let names: Vec<_> = mods.iter().map(|m| m.ident.to_string()).collect();
-        assert_eq!(names, vec!["Test_Nested", "Root"]);
+        assert_eq!(names, vec!["Test_More", "Root"]);
     }
 }

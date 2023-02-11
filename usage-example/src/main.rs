@@ -1,6 +1,6 @@
 use openapi_gen_macro::api;
 
-#[api(path = "src/some_site.json")]
+#[api(path = "../openapi-gen-core/tests/simple_site.json")]
 mod some_site {}
 
 fn main() {
