@@ -27,6 +27,15 @@
                 }
               }
             }
+          },
+          {
+            "name": "RandomKey",
+            "in": "header",
+            "description": "Something passed as a header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

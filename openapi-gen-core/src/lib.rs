@@ -197,39 +197,29 @@ impl IntoOperationMod for Operation {
         let mut param_struct: ItemStruct = parse_quote! {
           pub struct QueryParams {}
         };
-        if let Fields::Named(ref mut fields) = param_struct.fields {
-            for param in self.parameters {
-                let param = param.into_item().unwrap();
-                match param {
-                    Parameter::Query { parameter_data, .. } => {
-                        let name = parameter_data.name;
-                        let ident = format_ident!("{name}");
-
-                        if let ParameterSchemaOrContent::Schema(s) = parameter_data.format {
-                            let s = s.into_item().unwrap();
-
-                            let struct_name = "InnerParam";
-                            let ty = s.as_type(&mut structs, struct_name, 0);
-
-                            fields.named.push(
-                                syn::Field::parse_named
-                                    .parse2(quote::quote! { pub #ident: #ty })
-                                    .unwrap(),
-                            );
-                        } else {
-                            todo!("Need to handle cases where we have the nested content instead of a schema")
-                        }
-                    }
-                    Parameter::Header { .. } => todo!(),
-                    Parameter::Path { .. } => todo!(),
-                    Parameter::Cookie { .. } => todo!(),
-                };
-            }
-        } else {
-            panic!("This should always be named cause we just made the struct")
+        let mut headers_struct: ItemStruct = parse_quote! {
+          pub struct Headers {}
         };
 
+        let Fields::Named(ref mut struct_fields) = param_struct.fields else { panic!("This should always be named cause we just made the struct") };
+        let Fields::Named(ref mut header_fields) = headers_struct.fields else { panic!("This should always be named cause we just made the struct") };
+
+        for param in self.parameters {
+            let param = param.into_item().unwrap();
+            match param {
+                Parameter::Query { parameter_data, .. } => {
+                    add_field_for_param(parameter_data, &mut structs, struct_fields, "InnerParam");
+                }
+                Parameter::Header { parameter_data, .. } => {
+                    add_field_for_param(parameter_data, &mut structs, header_fields, "InnerHeader")
+                }
+                Parameter::Path { .. } => todo!(),
+                Parameter::Cookie { .. } => todo!(),
+            };
+        }
+
         content.push(param_struct.into());
+        content.push(headers_struct.into());
 
         content.push(request_struct.into());
         content.push(response_enum.into());
@@ -239,6 +229,30 @@ impl IntoOperationMod for Operation {
         }
 
         operation_mod
+    }
+}
+
+fn add_field_for_param(
+    parameter_data: ParameterData,
+    structs: &mut Vec<ItemStruct>,
+    struct_fields: &mut syn::FieldsNamed,
+    default_struct_name: &str,
+) {
+    let name = parameter_data.name;
+    let ident = format_ident!("{name}");
+
+    if let ParameterSchemaOrContent::Schema(s) = parameter_data.format {
+        let s = s.into_item().unwrap();
+
+        let ty = s.as_type(structs, default_struct_name, 0);
+
+        struct_fields.named.push(
+            syn::Field::parse_named
+                .parse2(quote::quote! { pub #ident: #ty })
+                .unwrap(),
+        );
+    } else {
+        todo!("Need to handle cases where we have the nested content instead of a schema")
     }
 }
 
