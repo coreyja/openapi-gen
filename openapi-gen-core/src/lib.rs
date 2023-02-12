@@ -391,30 +391,4 @@ mod test {
         let names: Vec<_> = mods.iter().map(|m| m.ident.to_string()).collect();
         assert_eq!(names, vec!["Test_More", "Root"]);
     }
-
-    #[test]
-    fn test_openapi_crate_ordering() {
-        let spec_string = include_str!("../tests/simple_site.json");
-        let spec: OpenAPI = serde_json::from_str(spec_string).unwrap();
-
-        let root_path = spec.paths.iter().find(|(p, _)| p.as_str() == "/").unwrap();
-        let root_path = root_path.1.as_item().unwrap();
-        let op = root_path.get.as_ref().unwrap();
-        let resp = op.responses.responses.get(&StatusCode::Code(200)).unwrap();
-        let resp = resp.as_item().unwrap();
-
-        let mut examples = resp
-            .content
-            .get("application/json")
-            .unwrap()
-            .examples
-            .iter();
-
-        let example = examples.next();
-        let example = example.as_ref().unwrap();
-
-        dbg!(example);
-
-        panic!()
-    }
 }

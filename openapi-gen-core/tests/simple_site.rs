@@ -46,50 +46,58 @@ fn test_simple_site() {
       mod test {
         pub mod Test_More {
           pub mod Get {
+            pub mod Request {
               pub struct QueryParams {
                   pub test: InnerParam,
               }
               pub struct Headers {
                   pub RandomKey: String,
               }
-              pub struct Request {}
-              ///Test this Response
-              pub enum Response {
-                  _200(Response200),
-              }
-              pub struct Response200 {
-                  pub id: String,
-                  pub name: String,
-              }
+              pub struct Body {}
               pub struct InnerParam {
                   pub foo: String,
                   pub bar: String,
               }
+            }
+            pub mod Response {
+              ///Test this Response
+              pub enum Body {
+                  _200(Body200),
+              }
+              pub struct Body200 {
+                  pub id: String,
+                  pub name: String,
+              }
+            }
           }
         }
         pub mod Root {
-            pub mod Get {
-                pub struct QueryParams {}
-                pub struct Headers {}
-                pub struct Request {}
-                ///Test this Response
-                pub enum Response {
-                    _200(Response200),
-                }
-                pub struct Response200_4 {
-                    pub href: String,
-                    pub rel: String,
-                }
-                pub struct Response200_2 {
-                    pub status: String,
-                    pub updated: String,
-                    pub id: String,
-                    pub links: Vec<Response200_4>,
-                }
-                pub struct Response200 {
-                    pub versions: Vec<Response200_2>,
-                }
+          pub mod Get {
+            pub mod Request {
+              pub struct QueryParams {}
+              pub struct Headers {}
+              pub struct Body {}
             }
+            pub mod Response {
+              ///Test this Response
+              pub enum Body {
+                  _200(Body200),
+              }
+              pub struct Body200_4 {
+                  pub href: String,
+                  pub rel: String,
+              }
+              pub struct Body200_2 {
+                  pub status: String,
+                  pub updated: String,
+                  pub id: String,
+                  pub links: Vec<Body200_4>,
+              }
+              pub struct Body200 {
+                  pub versions: Vec<Body200_2>,
+              }
+            }
+          }
         }
       }
     };
