@@ -10,12 +10,13 @@ fn assert_token_streams_match(
     let string_actual = actual.to_string();
     let string_expected = expected.to_string();
 
-    if string_actual != string_expected {
-        let formatted_actual = prettyplease::unparse(&parse_file(&string_actual).unwrap());
-        let formatted_expected = prettyplease::unparse(&parse_file(&string_expected).unwrap());
+    let parsed_file_actual = parse_file(&string_actual).unwrap();
+    let parsed_file_expected = parse_file(&string_expected).unwrap();
 
-        // println!("Actual:\n{formatted_actual}");
-        // println!("Expected:\n{formatted_expected}");
+    let formatted_actual = prettyplease::unparse(&parsed_file_actual);
+    let formatted_expected = prettyplease::unparse(&parsed_file_expected);
+
+    if formatted_actual != formatted_expected {
         let diff = TextDiff::from_lines(&formatted_expected, &formatted_actual);
 
         println!("Diff:");
