@@ -23,7 +23,8 @@ impl IntoMod for Responses {
         let mut structs: Vec<ItemStruct> = vec![];
         let mut header_structs: Vec<ItemStruct> = vec![];
         for (status_code, resp) in &self.responses {
-            let resp = resp.as_item().unwrap();
+            let resp = refs.resolve(resp).unwrap();
+
             let variant_ident = format_ident!("_{status_code}");
             let content = &resp.content;
 
@@ -47,7 +48,7 @@ impl IntoMod for Responses {
                     else { panic!("This should always be named cause we just made the struct") };
 
                 for (header_name, header) in headers {
-                    let header = header.as_item().unwrap();
+                    let header = refs.resolve(header).unwrap();
                     let field_ident = format_ident!("{}", header_name.to_snake_case());
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
                     let schema = refs.resolve(schema).unwrap();
@@ -101,9 +102,9 @@ pub(crate) fn content_to_tokens(
         schema.as_type(refs, structs, struct_ident, 0)
     } else {
         let mut iter = json_content.examples.into_iter();
-        let item = iter.next().unwrap();
-        let example_value = item.1.into_item();
-        let example_value = example_value.unwrap().value.unwrap();
+        let (_name, example_value) = iter.next().unwrap();
+        let example_value = refs.resolve(&example_value).unwrap();
+        let example_value = example_value.value.unwrap();
 
         type_for(refs, &example_value, structs, struct_ident, 0)
     }

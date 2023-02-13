@@ -1,7 +1,9 @@
 use std::borrow::Borrow;
 
 use indexmap::IndexMap;
-use openapiv3::{Components, OpenAPI, ReferenceOr, RequestBody, Schema};
+use openapiv3::{
+    Components, Example, Header, OpenAPI, Parameter, ReferenceOr, RequestBody, Response, Schema,
+};
 use regex::Regex;
 
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
@@ -20,10 +22,10 @@ pub(crate) trait Refable: Sized + Clone {
 
     fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>>;
 
-    fn regex() -> Regex;
+    fn regex_string() -> &'static str;
 
     fn name(r: &str) -> Result<&str, String> {
-        let reg: Regex = Self::regex();
+        let reg: Regex = regex::Regex::new(Self::regex_string()).unwrap();
         let m = reg
             .captures(r)
             .ok_or_else(|| "Reference does not match regex for Schema".to_owned())?;
@@ -56,8 +58,8 @@ impl ReferenceableAPI {
 }
 
 impl Refable for Schema {
-    fn regex() -> Regex {
-        regex::Regex::new(r"#/components/schemas/(.*)").unwrap()
+    fn regex_string() -> &'static str {
+        r"#/components/schemas/(.*)"
     }
 
     fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
@@ -66,12 +68,52 @@ impl Refable for Schema {
 }
 
 impl Refable for RequestBody {
-    fn regex() -> Regex {
-        regex::Regex::new(r"#/components/requestBodies/(.*)").unwrap()
+    fn regex_string() -> &'static str {
+        r"#/components/requestBodies/(.*)"
     }
 
     fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
         &components.request_bodies
+    }
+}
+
+impl Refable for Parameter {
+    fn regex_string() -> &'static str {
+        r"#/components/parameters/(.*)"
+    }
+
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.parameters
+    }
+}
+
+impl Refable for Response {
+    fn regex_string() -> &'static str {
+        r"#/components/responses/(.*)"
+    }
+
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.responses
+    }
+}
+
+impl Refable for Header {
+    fn regex_string() -> &'static str {
+        r"#/components/headers/(.*)"
+    }
+
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.headers
+    }
+}
+
+impl Refable for Example {
+    fn regex_string() -> &'static str {
+        r"#/components/examples/(.*)"
+    }
+
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.examples
     }
 }
 

@@ -36,12 +36,12 @@ impl AsRequestMod for Operation {
         let Fields::Named(ref mut path_fields) = path_struct.fields else { panic!("This should always be named cause we just made the struct") };
 
         for param in &self.parameters {
-            let param = param.as_item().unwrap();
+            let param = refs.resolve(param).unwrap();
             match param {
                 Parameter::Query { parameter_data, .. } => {
                     add_field_for_param(
                         refs,
-                        parameter_data,
+                        &parameter_data,
                         &mut structs,
                         struct_fields,
                         "InnerParam",
@@ -49,14 +49,14 @@ impl AsRequestMod for Operation {
                 }
                 Parameter::Header { parameter_data, .. } => add_field_for_param(
                     refs,
-                    parameter_data,
+                    &parameter_data,
                     &mut structs,
                     header_fields,
                     "InnerHeader",
                 ),
                 Parameter::Path { parameter_data, .. } => add_field_for_param(
                     refs,
-                    parameter_data,
+                    &parameter_data,
                     &mut structs,
                     path_fields,
                     "InnerPath",
@@ -88,7 +88,7 @@ fn add_field_for_param(
     let ident = format_ident!("{name}");
 
     if let ParameterSchemaOrContent::Schema(s) = &parameter_data.format {
-        let s = s.as_item().unwrap();
+        let s = refs.resolve(s).unwrap();
 
         let ty = s.as_type(refs, structs, default_struct_name, 0);
 
