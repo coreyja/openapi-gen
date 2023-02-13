@@ -12,13 +12,16 @@ impl AsRequestMod for Operation {
         let content = &mut request_mod.content.as_mut().unwrap().1;
 
         let request_struct: ItemStruct = parse_quote! {
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub struct Body {}
         };
 
         let mut param_struct: ItemStruct = parse_quote! {
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub struct QueryParams {}
         };
         let mut headers_struct: ItemStruct = parse_quote! {
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub struct Headers {}
         };
 

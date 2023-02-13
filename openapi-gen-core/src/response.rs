@@ -4,6 +4,7 @@ impl IntoMod for Responses {
     fn into_mod(self) -> syn::ItemMod {
         let mut response_enum: ItemEnum = parse_quote! {
           #[doc="Test this Response"]
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub enum Body { }
         };
 

@@ -47,13 +47,17 @@ fn test_simple_site() {
         pub mod test_more {
           pub mod get {
             pub mod request {
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct QueryParams {
                   pub test: InnerParam,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {
                   pub RandomKey: String,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct InnerParam {
                   pub foo: String,
                   pub bar: String,
@@ -61,9 +65,11 @@ fn test_simple_site() {
             }
             pub mod response {
               ///Test this Response
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub enum Body {
                   _200(Body200),
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200 {
                   pub id: String,
                   pub name: String,
@@ -74,25 +80,32 @@ fn test_simple_site() {
         pub mod root {
           pub mod get {
             pub mod request {
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct QueryParams {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body {}
             }
             pub mod response {
               ///Test this Response
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub enum Body {
                   _200(Body200),
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200_4 {
                   pub href: String,
                   pub rel: String,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200_2 {
                   pub status: String,
                   pub updated: String,
                   pub id: String,
                   pub links: Vec<Body200_4>,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200 {
                   pub versions: Vec<Body200_2>,
               }

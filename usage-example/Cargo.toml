@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 openapi-gen-macro = { path = "../openapi-gen-macro" }
+serde = { version = "1.0.152", features = ["derive"] }
