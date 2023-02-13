@@ -4,9 +4,14 @@ pub(crate) trait IntoType {
 }
 
 impl IntoType for Schema {
-    fn as_type(&self, new_structs: &mut Vec<ItemStruct>, name: &str, count: usize) -> TokenStream {
+    fn as_type(
+        &self,
+        new_structs: &mut Vec<ItemStruct>,
+        new_struct_name: &str,
+        count: usize,
+    ) -> TokenStream {
         match &self.schema_kind {
-            SchemaKind::Type(t) => into_type(t, new_structs, name, count),
+            SchemaKind::Type(t) => into_type(t, new_structs, new_struct_name, count),
             SchemaKind::OneOf { .. } => todo!("Generate an enum from the possible schemas"),
             SchemaKind::AllOf { .. } => {
                 todo!("IDK... Try to make a struct thats the union of all the schemas?")
@@ -23,7 +28,7 @@ impl IntoType for Schema {
 pub(crate) fn into_type(
     t: &Type,
     new_structs: &mut Vec<ItemStruct>,
-    name: &str,
+    new_struct_name: &str,
     count: usize,
 ) -> TokenStream {
     match t {
@@ -32,9 +37,9 @@ pub(crate) fn into_type(
         Type::Integer(_) => quote::quote!(i64),
         Type::Object(o) => {
             let ident = if count == 0 {
-                name.to_string()
+                new_struct_name.to_string()
             } else {
-                format!("{name}_{count}")
+                format!("{new_struct_name}_{count}")
             };
             let ident = format_ident!("{ident}");
             let mut s: ItemStruct = parse_quote! {
@@ -50,7 +55,18 @@ pub(crate) fn into_type(
                 for (key, value) in o.properties.iter() {
                     let s = value.as_item().unwrap();
 
-                    let ty = s.as_type(new_structs, name, count + 1);
+                    let new_thing_is_array =
+                        matches!(&s.schema_kind, SchemaKind::Type(Type::Array(_)));
+
+                    let new_struct_name = key.to_pascal_case();
+
+                    let new_struct_name = if new_thing_is_array {
+                        new_struct_name.to_singular()
+                    } else {
+                        new_struct_name
+                    };
+
+                    let ty = s.as_type(new_structs, &new_struct_name, 0);
 
                     let key = format_ident!("{key}");
 
@@ -74,7 +90,7 @@ pub(crate) fn into_type(
                 Some(s) => {
                     let s = s.as_item().unwrap();
 
-                    s.as_type(new_structs, name, count + 1)
+                    s.as_type(new_structs, new_struct_name, count)
                 }
                 None => todo!("What do we do with empty arrays?"),
             };
@@ -85,71 +101,6 @@ pub(crate) fn into_type(
     }
 }
 
-pub(crate) fn type_for_value(value: &Value) -> Type {
-    match value {
-        Value::Null => todo!("What do we do with nulls?"),
-        Value::Bool(_) => Type::Boolean {},
-        Value::Number(n) => {
-            if n.is_f64() {
-                Type::Number(Default::default())
-            } else {
-                Type::Integer(Default::default())
-            }
-        }
-        Value::String(_) => Type::String(Default::default()),
-        Value::Array(a) => {
-            let sample = a.iter().next();
-            let ty = match sample {
-                Some(v) => type_for_value(v),
-                None => todo!("What do we do with empty arrays?"),
-            };
-
-            let s = Schema {
-                schema_data: Default::default(),
-                schema_kind: SchemaKind::Type(ty),
-            };
-            let s = Box::new(s);
-            let s = ReferenceOr::Item(s);
-
-            Type::Array(ArrayType {
-                items: s.into(),
-                min_items: None,
-                max_items: None,
-                unique_items: false,
-            })
-        }
-        Value::Object(o) => {
-            let mut properties = Vec::<(String, _)>::new();
-            for (key, value) in o.iter() {
-                let ty = type_for_value(value);
-                let s = Schema {
-                    schema_data: Default::default(),
-                    schema_kind: SchemaKind::Type(ty),
-                };
-                let s = Box::new(s);
-                let s = ReferenceOr::Item(s);
-
-                properties.push((key.to_owned(), s));
-            }
-
-            Type::Object(ObjectType {
-                properties: properties.into_iter().collect(),
-                required: vec![],
-                additional_properties: None,
-                min_properties: None,
-                max_properties: None,
-            })
-        }
-    }
-}
-
-pub(crate) fn type_for(
-    value: &Value,
-    new_structs: &mut Vec<ItemStruct>,
-    name: &str,
-    count: usize,
-) -> TokenStream {
-    let openapi_type = type_for_value(value);
-
-    into_type(&openapi_type, new_structs, name, count)
-}
+mod value;
+use inflector::Inflector;
+pub use value::*;
