@@ -17,16 +17,13 @@ mod request;
 use request::*;
 
 mod op;
-use op::*;
 
 mod path;
-use path::*;
 
 mod schema;
 use schema::*;
 
 mod utils;
-pub(crate) use utils::*;
 
 mod refs;
 use refs::*;

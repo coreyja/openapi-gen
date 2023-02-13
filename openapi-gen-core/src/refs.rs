@@ -5,7 +5,7 @@ use regex::Regex;
 
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
 
-pub(crate) trait Refable: Sized {
+pub(crate) trait Refable {
     fn resolve<'a>(refs: &'a Components, r: &'a str) -> Result<&'a Self, String>;
 
     fn regex() -> Regex;

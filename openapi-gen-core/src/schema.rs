@@ -1,4 +1,6 @@
 use super::*;
+
+use inflector::Inflector;
 pub(crate) trait IntoType {
     fn as_type(
         &self,
@@ -110,5 +112,3 @@ pub(crate) fn into_type(
 }
 
 mod value;
-use inflector::Inflector;
-pub use value::*;
