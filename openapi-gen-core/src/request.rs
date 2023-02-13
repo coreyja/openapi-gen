@@ -13,7 +13,7 @@ impl AsRequestMod for Operation {
         let mut structs: Vec<ItemStruct> = vec![];
 
         if let Some(request_body) = &self.request_body {
-            let request_body = request_body.as_item().unwrap();
+            let request_body = refs.resolve(request_body).unwrap();
 
             content_to_tokens(refs, &request_body.content, &mut structs, "Body");
         }

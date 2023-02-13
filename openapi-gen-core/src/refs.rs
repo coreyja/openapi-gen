@@ -1,12 +1,24 @@
 use std::borrow::Borrow;
 
-use openapiv3::{Components, OpenAPI, ReferenceOr, Schema};
+use indexmap::IndexMap;
+use openapiv3::{Components, OpenAPI, ReferenceOr, RequestBody, Schema};
 use regex::Regex;
 
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
 
-pub(crate) trait Refable: Sized {
-    fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String>;
+pub(crate) trait Refable: Sized + Clone {
+    fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String> {
+        let components = refs.components()?;
+        let name = Self::name(r)?;
+
+        let s = Self::get_index_map(components)
+            .get(name)
+            .ok_or_else(|| format!("Schema not found for: {}", name))?;
+
+        refs.resolve(s)
+    }
+
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>>;
 
     fn regex() -> Regex;
 
@@ -45,20 +57,21 @@ impl ReferenceableAPI {
 
 impl Refable for Schema {
     fn regex() -> Regex {
-        let reg: Regex = regex::Regex::new(r"#/components/schemas/(.*)").unwrap();
-        reg
+        regex::Regex::new(r"#/components/schemas/(.*)").unwrap()
     }
 
-    fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String> {
-        let components = refs.components()?;
-        let name = Self::name(r)?;
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.schemas
+    }
+}
 
-        let s = components
-            .schemas
-            .get(name)
-            .ok_or_else(|| format!("Schema not found for: {}", name))?;
+impl Refable for RequestBody {
+    fn regex() -> Regex {
+        regex::Regex::new(r"#/components/requestBodies/(.*)").unwrap()
+    }
 
-        refs.resolve(s)
+    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
+        &components.request_bodies
     }
 }
 
