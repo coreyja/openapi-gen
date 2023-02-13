@@ -45,7 +45,7 @@ fn test_simple_site() {
     let expected = parse_quote! {
       mod test {
         pub mod test_more {
-          pub mod get {
+          pub mod post {
             pub mod request {
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct QueryParams {
@@ -56,7 +56,10 @@ fn test_simple_site() {
                   pub RandomKey: String,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-              pub struct Body {}
+              pub struct Body {
+                  pub foo: String,
+                  pub bar: String,
+              }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct InnerParam {
                   pub foo: String,
@@ -84,8 +87,6 @@ fn test_simple_site() {
               pub struct QueryParams {}
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {}
-              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-              pub struct Body {}
             }
             pub mod response {
               ///Test this Response

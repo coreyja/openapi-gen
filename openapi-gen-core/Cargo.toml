@@ -13,6 +13,7 @@ openapiv3 = "1.0.2"
 serde_json = { version = "1.0.92", features = ["preserve_order"] }
 darling = "0.14.2"
 Inflector = "0.11.4"
+indexmap = "1.9.2"
 
 [dev-dependencies]
 prettyplease = "0.1.23"

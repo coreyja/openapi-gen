@@ -6,10 +6,27 @@
   },
   "paths": {
     "/test/more": {
-      "get": {
+      "post": {
         "operationId": "testOperation",
         "summary": "Test summary",
         "description": "Test description",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "foo": {
+                    "type": "string"
+                  },
+                  "bar": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "name": "test",

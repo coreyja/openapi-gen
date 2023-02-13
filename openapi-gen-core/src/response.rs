@@ -1,3 +1,7 @@
+use std::hash::Hash;
+
+use indexmap::IndexMap;
+
 use super::*;
 
 impl IntoMod for Responses {
@@ -12,15 +16,10 @@ impl IntoMod for Responses {
         for (status_code, resp) in self.responses {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
-
-            let x = resp.content.get("application/json").unwrap().clone();
-            let mut iter = x.examples.into_iter();
-            let item = iter.next().unwrap();
-            let example_value = item.1.into_item();
-            let example_value = example_value.unwrap().value.unwrap();
+            let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = type_for(&example_value, &mut structs, &struct_ident, 0);
+            let ty = content_to_tokens(content, &mut structs, status_code, &struct_ident);
 
             response_enum.variants.push(parse_quote! {
               #variant_ident(#ty)
@@ -38,5 +37,27 @@ impl IntoMod for Responses {
         }
 
         response_mod
+    }
+}
+
+pub(crate) fn content_to_tokens(
+    content: &IndexMap<String, MediaType>,
+    structs: &mut Vec<ItemStruct>,
+    status_code: StatusCode,
+    struct_ident: &str,
+) -> TokenStream {
+    let json_content = content.get("application/json").unwrap().clone();
+
+    if let Some(schema) = json_content.schema {
+        let schema = schema.as_item().unwrap();
+
+        schema.as_type(structs, &struct_ident, 0)
+    } else {
+        let mut iter = json_content.examples.into_iter();
+        let item = iter.next().unwrap();
+        let example_value = item.1.into_item();
+        let example_value = example_value.unwrap().value.unwrap();
+
+        type_for(&example_value, structs, &struct_ident, 0)
     }
 }
