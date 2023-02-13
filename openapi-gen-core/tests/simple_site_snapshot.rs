@@ -94,20 +94,20 @@ fn test_simple_site() {
                   _200(Body200),
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-              pub struct Body200_4 {
+              pub struct Link {
                   pub href: String,
                   pub rel: String,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-              pub struct Body200_2 {
+              pub struct Version {
                   pub status: String,
                   pub updated: String,
                   pub id: String,
-                  pub links: Vec<Body200_4>,
+                  pub links: Vec<Link>,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200 {
-                  pub versions: Vec<Body200_2>,
+                  pub versions: Vec<Version>,
               }
             }
           }
