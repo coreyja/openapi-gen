@@ -11,7 +11,7 @@ pub(crate) trait Refable: Sized {
     fn regex() -> Regex;
 
     fn name(r: &str) -> Result<&str, String> {
-        let reg: Regex = regex::Regex::new(r"#/components/schemas/(.*)").unwrap();
+        let reg: Regex = Self::regex();
         let m = reg
             .captures(r)
             .ok_or_else(|| "Reference does not match regex for Schema".to_owned())?;
@@ -20,18 +20,12 @@ pub(crate) trait Refable: Sized {
 }
 
 impl ReferenceableAPI {
-    pub(crate) fn resolve<ArgType, ReturnType>(
+    pub(crate) fn resolve<ReturnType>(
         &self,
-        r: &ReferenceOr<ArgType>,
+        r: &ReferenceOr<impl Borrow<ReturnType>>,
     ) -> Result<ReturnType, String>
     where
-        // ArgType: Into<Cow<'a, ReturnType>>,
-        // for<'b> &'b ArgType: Into<Cow<'b, ReturnType>> + 'b,
-        // for<'b> &'b ReturnType: Into<Cow<'b, ReturnType>> + 'b,
-        // ReturnType: Into<Cow<'a, ReturnType>>,
         ReturnType: Refable + Clone,
-        ArgType: Clone,
-        ArgType: Borrow<ReturnType>,
     {
         match r {
             ReferenceOr::Reference { reference } => {
