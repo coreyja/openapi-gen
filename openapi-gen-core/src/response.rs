@@ -10,8 +10,18 @@ impl IntoMod for Responses {
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub enum Body { }
         };
+        let mut headers_enum: ItemEnum = parse_quote! {
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+          pub enum Headers { }
+        };
+
+        let mut response_mod: syn::ItemMod = parse_quote! {
+            pub mod response {}
+        };
+        let contents = &mut response_mod.content.as_mut().unwrap().1;
 
         let mut structs: Vec<ItemStruct> = vec![];
+        let mut header_structs: Vec<ItemStruct> = vec![];
         for (status_code, resp) in self.responses {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
@@ -38,7 +48,7 @@ impl IntoMod for Responses {
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
                     let schema = schema.as_item().unwrap();
 
-                    let field_ty = schema.as_type(&mut structs, header_name, 0);
+                    let field_ty = schema.as_type(&mut header_structs, header_name, 0);
 
                     header_fields.named.push(
                         syn::Field::parse_named
@@ -47,7 +57,10 @@ impl IntoMod for Responses {
                     );
                 }
 
-                structs.push(header_struct);
+                header_structs.push(header_struct);
+                headers_enum.variants.push(parse_quote! {
+                    #variant_ident(#header_struct_ident)
+                });
             }
 
             response_enum.variants.push(parse_quote! {
@@ -55,13 +68,14 @@ impl IntoMod for Responses {
             });
         }
 
-        let mut response_mod: syn::ItemMod = parse_quote! {
-            pub mod response {}
-        };
-        let contents = &mut response_mod.content.as_mut().unwrap().1;
-
         contents.push(response_enum.into());
+        if !header_structs.is_empty() {
+            contents.push(headers_enum.into());
+        }
         for s in structs {
+            contents.push(s.into());
+        }
+        for s in header_structs {
             contents.push(s.into());
         }
 

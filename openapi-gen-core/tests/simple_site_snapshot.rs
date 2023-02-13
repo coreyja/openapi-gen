@@ -73,6 +73,10 @@ fn test_simple_site() {
                   _200(Body200),
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub enum Headers {
+                  _200(Headers200),
+              }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body200 {
                   pub id: String,
                   pub name: String,
