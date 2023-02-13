@@ -44,9 +44,9 @@ fn test_simple_site() {
 
     let expected = parse_quote! {
       mod test {
-        pub mod Test_More {
-          pub mod Get {
-            pub mod Request {
+        pub mod test_more {
+          pub mod get {
+            pub mod request {
               pub struct QueryParams {
                   pub test: InnerParam,
               }
@@ -59,7 +59,7 @@ fn test_simple_site() {
                   pub bar: String,
               }
             }
-            pub mod Response {
+            pub mod response {
               ///Test this Response
               pub enum Body {
                   _200(Body200),
@@ -71,14 +71,14 @@ fn test_simple_site() {
             }
           }
         }
-        pub mod Root {
-          pub mod Get {
-            pub mod Request {
+        pub mod root {
+          pub mod get {
+            pub mod request {
               pub struct QueryParams {}
               pub struct Headers {}
               pub struct Body {}
             }
-            pub mod Response {
+            pub mod response {
               ///Test this Response
               pub enum Body {
                   _200(Body200),
