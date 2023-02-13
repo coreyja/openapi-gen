@@ -30,7 +30,7 @@ impl IntoMod for Path<'_> {
         };
         let path_ident = format_ident!("{}", path_ident);
 
-        let item = item.as_item().unwrap();
+        let item = item.as_item().expect("This is assumed to be safe since I don't believe PathItems can be referenced in components");
 
         let mut path_mod: syn::ItemMod = parse_quote! {
             pub mod #path_ident {}

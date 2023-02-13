@@ -5,8 +5,8 @@ use regex::Regex;
 
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
 
-pub(crate) trait Refable {
-    fn resolve<'a>(refs: &'a Components, r: &'a str) -> Result<&'a Self, String>;
+pub(crate) trait Refable: Sized {
+    fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String>;
 
     fn regex() -> Regex;
 
@@ -28,16 +28,18 @@ impl ReferenceableAPI {
         ReturnType: Refable + Clone,
     {
         match r {
-            ReferenceOr::Reference { reference } => {
-                let components = self
-                    .0
-                    .components
-                    .as_ref()
-                    .ok_or_else(|| "No refable components in the spec file".to_owned())?;
-                ReturnType::resolve(components, reference).map(Clone::clone)
-            }
+            ReferenceOr::Reference { reference } => ReturnType::resolve(self, reference),
             ReferenceOr::Item(value) => Ok(value.borrow().clone()),
         }
+    }
+
+    fn components(&self) -> Result<&Components, String> {
+        let components = self
+            .0
+            .components
+            .as_ref()
+            .ok_or_else(|| "No refable components in the spec file".to_owned())?;
+        Ok(components)
     }
 }
 
@@ -47,7 +49,8 @@ impl Refable for Schema {
         reg
     }
 
-    fn resolve<'a>(components: &'a Components, r: &'a str) -> Result<&'a Self, String> {
+    fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String> {
+        let components = refs.components()?;
         let name = Self::name(r)?;
 
         let s = components
@@ -55,7 +58,7 @@ impl Refable for Schema {
             .get(name)
             .ok_or_else(|| format!("Schema not found for: {}", name))?;
 
-        Ok(s.as_item().unwrap())
+        refs.resolve(s)
     }
 }
 

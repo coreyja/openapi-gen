@@ -1,6 +1,9 @@
 use super::*;
 
 use inflector::Inflector;
+
+mod value;
+pub(crate) use value::*;
 pub(crate) trait IntoType {
     fn as_type(
         &self,
@@ -110,5 +113,3 @@ pub(crate) fn into_type(
         Type::Boolean {} => quote::quote!(bool),
     }
 }
-
-mod value;
