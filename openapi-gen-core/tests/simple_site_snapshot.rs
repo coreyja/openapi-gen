@@ -77,6 +77,10 @@ fn test_simple_site() {
                   pub id: String,
                   pub name: String,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub struct Headers200 {
+                  pub x_test: String,
+              }
             }
           }
         }

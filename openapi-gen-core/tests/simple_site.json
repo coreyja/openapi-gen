@@ -69,6 +69,14 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-Test": {
+                "description": "Test header",
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           }
         }

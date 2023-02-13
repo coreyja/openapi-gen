@@ -1,6 +1,5 @@
-use std::hash::Hash;
-
 use indexmap::IndexMap;
+use inflector::Inflector;
 
 use super::*;
 
@@ -19,7 +18,37 @@ impl IntoMod for Responses {
             let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(content, &mut structs, status_code, &struct_ident);
+            let ty = content_to_tokens(content, &mut structs, status_code.clone(), &struct_ident);
+
+            let header_struct_ident = format!("Headers{status_code}");
+            let header_struct_ident = format_ident!("{}", header_struct_ident);
+            let headers = &resp.headers;
+            if !headers.is_empty() {
+                let mut header_struct: ItemStruct = parse_quote! {
+                  #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+                  pub struct #header_struct_ident {}
+                };
+
+                let Fields::Named(ref mut header_fields) = header_struct.fields
+                    else { panic!("This should always be named cause we just made the struct") };
+
+                for (header_name, header) in headers {
+                    let header = header.as_item().unwrap();
+                    let field_ident = format_ident!("{}", header_name.to_snake_case());
+                    let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
+                    let schema = schema.as_item().unwrap();
+
+                    let field_ty = schema.as_type(&mut structs, header_name, 0);
+
+                    header_fields.named.push(
+                        syn::Field::parse_named
+                            .parse2(quote::quote! { pub #field_ident: #field_ty })
+                            .unwrap(),
+                    );
+                }
+
+                structs.push(header_struct);
+            }
 
             response_enum.variants.push(parse_quote! {
               #variant_ident(#ty)
