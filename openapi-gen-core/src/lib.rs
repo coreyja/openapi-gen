@@ -26,7 +26,7 @@ mod schema;
 use schema::*;
 
 mod utils;
-use utils::*;
+pub(crate) use utils::*;
 
 mod refs;
 use refs::*;

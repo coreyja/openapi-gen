@@ -5,9 +5,9 @@ use syn::parse_quote;
 use utils::*;
 
 #[test]
-fn test_simple_site() {
+fn test_snapshot() {
     let args = MacroArgs {
-        path: "../fixtures/simple_site.json".to_string(),
+        path: "../fixtures/petstore.json".to_string(),
     };
     let input = quote::quote! {
         mod test {}

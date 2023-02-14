@@ -48,7 +48,7 @@ impl IntoMod for Responses {
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
                     let schema = refs.resolve(schema).unwrap();
 
-                    let field_ty = schema.as_type(&mut header_structs, header_name, 0);
+                    let field_ty = schema.as_type(refs, &mut header_structs, header_name, 0);
 
                     header_fields.named.push(
                         syn::Field::parse_named
@@ -94,13 +94,13 @@ pub(crate) fn content_to_tokens(
     if let Some(schema) = json_content.schema {
         let schema = refs.resolve(&schema).unwrap();
 
-        schema.as_type(structs, struct_ident, 0)
+        schema.as_type(refs, structs, struct_ident, 0)
     } else {
         let mut iter = json_content.examples.into_iter();
         let item = iter.next().unwrap();
         let example_value = item.1.into_item();
         let example_value = example_value.unwrap().value.unwrap();
 
-        type_for(&example_value, structs, struct_ident, 0)
+        type_for(refs, &example_value, structs, struct_ident, 0)
     }
 }

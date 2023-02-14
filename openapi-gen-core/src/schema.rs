@@ -1,17 +1,24 @@
 use super::*;
 pub(crate) trait IntoType {
-    fn as_type(&self, new_structs: &mut Vec<ItemStruct>, name: &str, count: usize) -> TokenStream;
+    fn as_type(
+        &self,
+        refs: &ReferenceableAPI,
+        new_structs: &mut Vec<ItemStruct>,
+        name: &str,
+        count: usize,
+    ) -> TokenStream;
 }
 
 impl IntoType for Schema {
     fn as_type(
         &self,
+        refs: &ReferenceableAPI,
         new_structs: &mut Vec<ItemStruct>,
         new_struct_name: &str,
         count: usize,
     ) -> TokenStream {
         match &self.schema_kind {
-            SchemaKind::Type(t) => into_type(t, new_structs, new_struct_name, count),
+            SchemaKind::Type(t) => into_type(refs, t, new_structs, new_struct_name, count),
             SchemaKind::OneOf { .. } => todo!("Generate an enum from the possible schemas"),
             SchemaKind::AllOf { .. } => {
                 todo!("IDK... Try to make a struct thats the union of all the schemas?")
@@ -26,6 +33,7 @@ impl IntoType for Schema {
 }
 
 pub(crate) fn into_type(
+    refs: &ReferenceableAPI,
     t: &Type,
     new_structs: &mut Vec<ItemStruct>,
     new_struct_name: &str,
@@ -66,7 +74,7 @@ pub(crate) fn into_type(
                         new_struct_name
                     };
 
-                    let ty = s.as_type(new_structs, &new_struct_name, 0);
+                    let ty = s.as_type(refs, new_structs, &new_struct_name, 0);
 
                     let key = format_ident!("{key}");
 
@@ -88,9 +96,9 @@ pub(crate) fn into_type(
             let sample = a.items.iter().next();
             let ty = match sample {
                 Some(s) => {
-                    let s = s.as_item().unwrap();
+                    let s = refs.resolve(s).unwrap();
 
-                    s.as_type(new_structs, new_struct_name, count)
+                    s.as_type(refs, new_structs, new_struct_name, count)
                 }
                 None => todo!("What do we do with empty arrays?"),
             };

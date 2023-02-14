@@ -59,6 +59,7 @@ pub(crate) fn type_for_value(value: &Value) -> Type {
 }
 
 pub(crate) fn type_for(
+    refs: &ReferenceableAPI,
     value: &Value,
     new_structs: &mut Vec<ItemStruct>,
     name: &str,
@@ -66,5 +67,5 @@ pub(crate) fn type_for(
 ) -> TokenStream {
     let openapi_type = type_for_value(value);
 
-    into_type(&openapi_type, new_structs, name, count)
+    into_type(refs, &openapi_type, new_structs, name, count)
 }
