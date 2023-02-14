@@ -4,7 +4,7 @@ use inflector::Inflector;
 use super::*;
 
 impl IntoMod for Responses {
-    fn as_mod(&self) -> syn::ItemMod {
+    fn as_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
         let mut response_enum: ItemEnum = parse_quote! {
           #[doc="Test this Response"]
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]

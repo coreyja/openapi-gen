@@ -1,9 +1,9 @@
 use super::*;
 
 impl IntoMods for Paths {
-    fn as_mods(&self) -> Vec<syn::ItemMod> {
+    fn as_mods(&self, refs: &ReferenceableAPI) -> Vec<syn::ItemMod> {
         self.iter()
-            .map(|(path, item)| Path(path, item).as_mod())
+            .map(|(path, item)| Path(path, item).as_mod(refs))
             .collect()
     }
 }
@@ -11,7 +11,7 @@ impl IntoMods for Paths {
 struct Path<'a>(&'a str, &'a ReferenceOr<PathItem>);
 
 impl IntoMod for Path<'_> {
-    fn as_mod(&self) -> syn::ItemMod {
+    fn as_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
         let path = self.0;
         let item = self.1;
 
@@ -42,10 +42,10 @@ impl IntoMod for Path<'_> {
         let content = &mut path_mod.content.as_mut().unwrap().1;
 
         if let Some(op) = &item.get {
-            content.push(("get", op).as_mod().into());
+            content.push(("get", op).as_mod(refs).into());
         }
         if let Some(op) = &item.post {
-            content.push(("post", op).as_mod().into());
+            content.push(("post", op).as_mod(refs).into());
         }
         // TODO: Need to do the rest of the operations
         // annoying there isn't any easy loop that I found
@@ -62,9 +62,9 @@ mod test {
     fn test_path_mod_names() {
         let spec_string = include_str!("../tests/simple_site.json");
         let spec: OpenAPI = serde_json::from_str(spec_string).unwrap();
+        let refs = ReferenceableAPI(spec);
 
-        let paths = spec.paths;
-        let mods = paths.as_mods();
+        let mods = refs.0.paths.as_mods(&refs);
 
         let names: Vec<_> = mods.iter().map(|m| m.ident.to_string()).collect();
         assert_eq!(names, vec!["test_more", "root"]);

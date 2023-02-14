@@ -1,11 +1,11 @@
 use super::*;
 
-pub trait AsRequestMod {
-    fn as_request_mod(&self) -> syn::ItemMod;
+pub(crate) trait AsRequestMod {
+    fn as_request_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod;
 }
 
 impl AsRequestMod for Operation {
-    fn as_request_mod(&self) -> syn::ItemMod {
+    fn as_request_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
         let mut request_mod: syn::ItemMod = parse_quote! {
             pub mod request {}
         };

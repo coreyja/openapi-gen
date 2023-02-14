@@ -28,12 +28,15 @@ use schema::*;
 mod utils;
 use utils::*;
 
+mod refs;
+use refs::*;
+
 trait IntoMods {
-    fn as_mods(&self) -> Vec<syn::ItemMod>;
+    fn as_mods(&self, refs: &ReferenceableAPI) -> Vec<syn::ItemMod>;
 }
 
 trait IntoMod {
-    fn as_mod(&self) -> syn::ItemMod;
+    fn as_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod;
 }
 
 #[derive(Debug, FromMeta)]
@@ -67,7 +70,9 @@ pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::Tok
         };
     }
 
-    let mods = openapi.paths.as_mods();
+    let refable = ReferenceableAPI(openapi);
+
+    let mods = refable.0.paths.as_mods(&refable);
 
     for m in mods.into_iter() {
         item_mod.content.as_mut().unwrap().1.push(m.into());
