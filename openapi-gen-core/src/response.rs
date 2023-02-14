@@ -28,7 +28,7 @@ impl IntoMod for Responses {
             let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(content, &mut structs, &struct_ident);
+            let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
 
             let header_struct_ident = format!("Headers{status_code}");
             let header_struct_ident = format_ident!("{}", header_struct_ident);
@@ -46,7 +46,7 @@ impl IntoMod for Responses {
                     let header = header.as_item().unwrap();
                     let field_ident = format_ident!("{}", header_name.to_snake_case());
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
-                    let schema = schema.as_item().unwrap();
+                    let schema = refs.resolve(schema).unwrap();
 
                     let field_ty = schema.as_type(&mut header_structs, header_name, 0);
 
@@ -84,6 +84,7 @@ impl IntoMod for Responses {
 }
 
 pub(crate) fn content_to_tokens(
+    refs: &ReferenceableAPI,
     content: &IndexMap<String, MediaType>,
     structs: &mut Vec<ItemStruct>,
     struct_ident: &str,
@@ -91,7 +92,7 @@ pub(crate) fn content_to_tokens(
     let json_content = content.get("application/json").unwrap().clone();
 
     if let Some(schema) = json_content.schema {
-        let schema = schema.as_item().unwrap();
+        let schema = refs.resolve(&schema).unwrap();
 
         schema.as_type(structs, struct_ident, 0)
     } else {

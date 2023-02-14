@@ -60,7 +60,7 @@ mod test {
 
     #[test]
     fn test_path_mod_names() {
-        let spec_string = include_str!("../tests/simple_site.json");
+        let spec_string = include_str!("../../fixtures/simple_site.json");
         let spec: OpenAPI = serde_json::from_str(spec_string).unwrap();
         let refs = ReferenceableAPI(spec);
 

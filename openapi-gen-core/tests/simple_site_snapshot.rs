@@ -36,7 +36,7 @@ fn assert_token_streams_match(
 #[test]
 fn test_simple_site() {
     let args = MacroArgs {
-        path: "tests/simple_site.json".to_string(),
+        path: "../fixtures/simple_site.json".to_string(),
     };
     let input = quote::quote! {
         mod test {}

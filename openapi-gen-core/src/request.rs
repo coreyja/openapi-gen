@@ -15,7 +15,7 @@ impl AsRequestMod for Operation {
         if let Some(request_body) = &self.request_body {
             let request_body = request_body.as_item().unwrap();
 
-            content_to_tokens(&request_body.content, &mut structs, "Body");
+            content_to_tokens(refs, &request_body.content, &mut structs, "Body");
         }
 
         let mut param_struct: ItemStruct = parse_quote! {
