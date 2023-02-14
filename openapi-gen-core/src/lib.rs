@@ -29,11 +29,11 @@ mod utils;
 use utils::*;
 
 trait IntoMods {
-    fn to_mods(self) -> Vec<syn::ItemMod>;
+    fn as_mods(&self) -> Vec<syn::ItemMod>;
 }
 
 trait IntoMod {
-    fn into_mod(self) -> syn::ItemMod;
+    fn as_mod(&self) -> syn::ItemMod;
 }
 
 #[derive(Debug, FromMeta)]
@@ -67,7 +67,7 @@ pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::Tok
         };
     }
 
-    let mods = openapi.paths.to_mods();
+    let mods = openapi.paths.as_mods();
 
     for m in mods.into_iter() {
         item_mod.content.as_mut().unwrap().1.push(m.into());

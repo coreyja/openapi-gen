@@ -4,7 +4,7 @@ use inflector::Inflector;
 use super::*;
 
 impl IntoMod for Responses {
-    fn into_mod(self) -> syn::ItemMod {
+    fn as_mod(&self) -> syn::ItemMod {
         let mut response_enum: ItemEnum = parse_quote! {
           #[doc="Test this Response"]
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -22,7 +22,7 @@ impl IntoMod for Responses {
 
         let mut structs: Vec<ItemStruct> = vec![];
         let mut header_structs: Vec<ItemStruct> = vec![];
-        for (status_code, resp) in self.responses {
+        for (status_code, resp) in &self.responses {
             let resp = resp.as_item().unwrap();
             let variant_ident = format_ident!("_{status_code}");
             let content = &resp.content;

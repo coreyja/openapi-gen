@@ -1,14 +1,20 @@
 use super::*;
 
 impl IntoMods for Paths {
-    fn to_mods(self) -> Vec<syn::ItemMod> {
-        self.into_iter().map(IntoMod::into_mod).collect()
+    fn as_mods(&self) -> Vec<syn::ItemMod> {
+        self.iter()
+            .map(|(path, item)| Path(path, item).as_mod())
+            .collect()
     }
 }
 
-impl IntoMod for (String, ReferenceOr<PathItem>) {
-    fn into_mod(self) -> syn::ItemMod {
-        let (path, item) = self;
+struct Path<'a>(&'a str, &'a ReferenceOr<PathItem>);
+
+impl IntoMod for Path<'_> {
+    fn as_mod(&self) -> syn::ItemMod {
+        let path = self.0;
+        let item = self.1;
+
         let path_parts: Vec<_> = path
             .to_ascii_lowercase()
             .split('/')
@@ -23,7 +29,7 @@ impl IntoMod for (String, ReferenceOr<PathItem>) {
         };
         let path_ident = format_ident!("{}", path_ident);
 
-        let item = item.into_item().unwrap();
+        let item = item.as_item().unwrap();
 
         // let mut id = item.get.unwrap().operation_id.unwrap();
         // make_ascii_titlecase(&mut id);
@@ -35,11 +41,11 @@ impl IntoMod for (String, ReferenceOr<PathItem>) {
         };
         let content = &mut path_mod.content.as_mut().unwrap().1;
 
-        if let Some(op) = item.get {
-            content.push(("get", op).into_mod().into());
+        if let Some(op) = &item.get {
+            content.push(("get", op).as_mod().into());
         }
-        if let Some(op) = item.post {
-            content.push(("post", op).into_mod().into());
+        if let Some(op) = &item.post {
+            content.push(("post", op).as_mod().into());
         }
         // TODO: Need to do the rest of the operations
         // annoying there isn't any easy loop that I found
@@ -58,7 +64,7 @@ mod test {
         let spec: OpenAPI = serde_json::from_str(spec_string).unwrap();
 
         let paths = spec.paths;
-        let mods = paths.to_mods();
+        let mods = paths.as_mods();
 
         let names: Vec<_> = mods.iter().map(|m| m.ident.to_string()).collect();
         assert_eq!(names, vec!["test_more", "root"]);
