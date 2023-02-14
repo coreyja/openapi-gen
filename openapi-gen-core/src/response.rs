@@ -28,7 +28,7 @@ impl IntoMod for Responses {
             let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(content, &mut structs, status_code.clone(), &struct_ident);
+            let ty = content_to_tokens(content, &mut structs, &struct_ident);
 
             let header_struct_ident = format!("Headers{status_code}");
             let header_struct_ident = format_ident!("{}", header_struct_ident);
@@ -86,7 +86,6 @@ impl IntoMod for Responses {
 pub(crate) fn content_to_tokens(
     content: &IndexMap<String, MediaType>,
     structs: &mut Vec<ItemStruct>,
-    status_code: StatusCode,
     struct_ident: &str,
 ) -> TokenStream {
     let json_content = content.get("application/json").unwrap().clone();
@@ -94,13 +93,13 @@ pub(crate) fn content_to_tokens(
     if let Some(schema) = json_content.schema {
         let schema = schema.as_item().unwrap();
 
-        schema.as_type(structs, &struct_ident, 0)
+        schema.as_type(structs, struct_ident, 0)
     } else {
         let mut iter = json_content.examples.into_iter();
         let item = iter.next().unwrap();
         let example_value = item.1.into_item();
         let example_value = example_value.unwrap().value.unwrap();
 
-        type_for(&example_value, structs, &struct_ident, 0)
+        type_for(&example_value, structs, struct_ident, 0)
     }
 }
