@@ -1,3 +1,14 @@
+#![deny(
+    warnings,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs
+)]
+//! `openapi-gen-core` is a library for generating Rust code from OpenAPI specifications.
+//!
+//! Among the universe of `openapi-gen` crates, it is the one is not expected to be used directly.
+//! It helps power `openapi-gen` and `openapi-gen-macro`
+
 use std::fs;
 
 use darling::FromMeta;
@@ -37,10 +48,21 @@ trait IntoMod {
 }
 
 #[derive(Debug, FromMeta)]
+/// Struct for parsing the `#[openapi]` attribute
+/// This is parsed by the `darling` crate
 pub struct MacroArgs {
+    /// Path, relative to the crate root, to the OpenAPI spec
     pub path: String,
 }
 
+/// Inner Function for the `#[api]` proc-macro
+/// This is the main entry point for the `openapi-gen` crate
+///
+/// The arguments just contain the path to an OpenAPI spec, that must currently be a JSON file
+///
+/// The input token stream is a module that the generated code will be placed in.
+/// Since this is expected to be run as a proc-macro, the input is expected to parse to a `syn::ItemMod`
+/// and it returns a `syn::ItemMod` [converted to a TokenStream] for the same module with the generated code added to it.
 pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     let mut item_mod = match syn::parse2::<syn::ItemMod>(input) {
         Ok(syntax_tree) => syntax_tree,
