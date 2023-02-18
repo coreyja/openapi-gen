@@ -27,14 +27,12 @@ impl IntoMod for Responses {
             let variant_ident = format_ident!("_{status_code}");
             let content = &resp.content;
 
-            if !content.is_empty() {
-                let struct_ident = format!("Body{status_code}");
-                let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
+            let struct_ident = format!("Body{status_code}");
+            let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
 
-                response_enum.variants.push(parse_quote! {
-                  #variant_ident(#ty)
-                });
-            }
+            response_enum.variants.push(parse_quote! {
+              #variant_ident(#ty)
+            });
 
             let header_struct_ident = format!("Headers{status_code}");
             let header_struct_ident = format_ident!("{}", header_struct_ident);

@@ -26,9 +26,14 @@ impl AsRequestMod for Operation {
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
           pub struct Headers {}
         };
+        let mut path_struct: ItemStruct = parse_quote! {
+          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+          pub struct PathParams {}
+        };
 
         let Fields::Named(ref mut struct_fields) = param_struct.fields else { panic!("This should always be named cause we just made the struct") };
         let Fields::Named(ref mut header_fields) = headers_struct.fields else { panic!("This should always be named cause we just made the struct") };
+        let Fields::Named(ref mut path_fields) = path_struct.fields else { panic!("This should always be named cause we just made the struct") };
 
         for param in &self.parameters {
             let param = param.as_item().unwrap();
@@ -49,13 +54,20 @@ impl AsRequestMod for Operation {
                     header_fields,
                     "InnerHeader",
                 ),
-                Parameter::Path { .. } => todo!(),
+                Parameter::Path { parameter_data, .. } => add_field_for_param(
+                    refs,
+                    parameter_data,
+                    &mut structs,
+                    path_fields,
+                    "InnerPath",
+                ),
                 Parameter::Cookie { .. } => todo!(),
             };
         }
 
         content.push(param_struct.into());
         content.push(headers_struct.into());
+        content.push(path_struct.into());
 
         for i in structs {
             content.push(i.into())

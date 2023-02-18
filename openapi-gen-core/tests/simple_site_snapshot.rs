@@ -27,6 +27,8 @@ fn test_simple_site() {
                   pub RandomKey: String,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub struct PathParams {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body {
                   pub foo: String,
                   pub bar: String,
@@ -66,6 +68,8 @@ fn test_simple_site() {
               pub struct QueryParams {}
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub struct PathParams {}
             }
             pub mod response {
               ///Test this Response

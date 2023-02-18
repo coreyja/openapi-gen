@@ -17,6 +17,8 @@ pub(crate) fn assert_token_streams_match(
     if formatted_actual != formatted_expected {
         let diff = TextDiff::from_lines(&formatted_expected, &formatted_actual);
 
+        println!("Actual:\n{formatted_actual}");
+
         println!("Diff:");
         for change in diff.iter_all_changes() {
             let sign = match change.tag() {
