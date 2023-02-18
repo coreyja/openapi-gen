@@ -89,6 +89,7 @@ pub(crate) fn content_to_tokens(
     structs: &mut Vec<ItemStruct>,
     struct_ident: &str,
 ) -> TokenStream {
+    dbg!(&content);
     let json_content = content.get("application/json").unwrap().clone();
 
     if let Some(schema) = json_content.schema {

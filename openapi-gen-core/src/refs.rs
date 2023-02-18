@@ -1,3 +1,8 @@
+use std::{
+    borrow::{Borrow, Cow},
+    ops::Deref,
+};
+
 use openapiv3::{Components, OpenAPI, ReferenceOr, Schema};
 use regex::Regex;
 
@@ -18,10 +23,19 @@ pub(crate) trait Refable: Sized {
 }
 
 impl ReferenceableAPI {
-    pub(crate) fn resolve<'a, T: Refable>(
+    pub(crate) fn resolve<'a, ArgType, ReturnType>(
         &'a self,
-        r: &'a ReferenceOr<T>,
-    ) -> Result<&'a T, String> {
+        r: &ReferenceOr<ArgType>,
+    ) -> Result<ReturnType, String>
+    where
+        // ArgType: Into<Cow<'a, ReturnType>>,
+        // for<'b> &'b ArgType: Into<Cow<'b, ReturnType>> + 'b,
+        // for<'b> &'b ReturnType: Into<Cow<'b, ReturnType>> + 'b,
+        // ReturnType: Into<Cow<'a, ReturnType>>,
+        ReturnType: Refable + Clone,
+        ArgType: Clone,
+        ArgType: Borrow<ReturnType>,
+    {
         match r {
             ReferenceOr::Reference { reference } => {
                 let components = self
@@ -29,9 +43,9 @@ impl ReferenceableAPI {
                     .components
                     .as_ref()
                     .ok_or_else(|| "No refable components in the spec file".to_owned())?;
-                T::resolve(components, reference).into()
+                ReturnType::resolve(components, &reference).map(Clone::clone)
             }
-            ReferenceOr::Item(value) => Ok(value.into()),
+            ReferenceOr::Item(value) => Ok(value.borrow().clone()),
         }
     }
 }
@@ -80,7 +94,7 @@ mod tests {
             spec.resolve(&ReferenceOr::<Schema>::Reference {
                 reference: "#/components/schemas/Error".to_owned()
             }),
-            Ok(&schema)
+            Ok(schema)
         );
         assert_eq!(
             spec.resolve(&ReferenceOr::<Schema>::Reference {

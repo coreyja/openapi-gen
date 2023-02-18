@@ -5,7 +5,7 @@ use syn::parse_quote;
 use utils::*;
 
 #[test]
-fn test_snapshot() {
+fn test_petstore_snapshot() {
     let args = MacroArgs {
         path: "../fixtures/petstore.json".to_string(),
     };
