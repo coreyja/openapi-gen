@@ -25,16 +25,12 @@ impl IntoMod for Path<'_> {
         let path_ident = if path_ident.is_empty() {
             "root".to_string()
         } else {
-            path_ident
+            // TODO: Handle Path Parameters better here
+            path_ident.replace(['{', '}'], "")
         };
         let path_ident = format_ident!("{}", path_ident);
 
         let item = item.as_item().unwrap();
-
-        // let mut id = item.get.unwrap().operation_id.unwrap();
-        // make_ascii_titlecase(&mut id);
-
-        // let id = format_ident!("{}", id);
 
         let mut path_mod: syn::ItemMod = parse_quote! {
             pub mod #path_ident {}
