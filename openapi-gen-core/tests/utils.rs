@@ -1,7 +1,7 @@
 use similar::{ChangeTag, TextDiff};
 use syn::parse_file;
 
-pub(crate) fn assert_token_streams_match(
+pub fn assert_token_streams_match(
     actual: proc_macro2::TokenStream,
     expected: proc_macro2::TokenStream,
 ) {

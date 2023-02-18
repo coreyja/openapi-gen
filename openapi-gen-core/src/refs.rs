@@ -1,7 +1,4 @@
-use std::{
-    borrow::{Borrow, Cow},
-    ops::Deref,
-};
+use std::borrow::Borrow;
 
 use openapiv3::{Components, OpenAPI, ReferenceOr, Schema};
 use regex::Regex;
@@ -16,15 +13,15 @@ pub(crate) trait Refable: Sized {
     fn name(r: &str) -> Result<&str, String> {
         let reg: Regex = regex::Regex::new(r"#/components/schemas/(.*)").unwrap();
         let m = reg
-            .captures(&r)
+            .captures(r)
             .ok_or_else(|| "Reference does not match regex for Schema".to_owned())?;
         Ok(m.get(1).unwrap().as_str())
     }
 }
 
 impl ReferenceableAPI {
-    pub(crate) fn resolve<'a, ArgType, ReturnType>(
-        &'a self,
+    pub(crate) fn resolve<ArgType, ReturnType>(
+        &self,
         r: &ReferenceOr<ArgType>,
     ) -> Result<ReturnType, String>
     where
@@ -43,7 +40,7 @@ impl ReferenceableAPI {
                     .components
                     .as_ref()
                     .ok_or_else(|| "No refable components in the spec file".to_owned())?;
-                ReturnType::resolve(components, &reference).map(Clone::clone)
+                ReturnType::resolve(components, reference).map(Clone::clone)
             }
             ReferenceOr::Item(value) => Ok(value.borrow().clone()),
         }
@@ -75,8 +72,6 @@ mod tests {
 
     #[test]
     fn test_resolve() {
-        let spec = include_str!("../../fixtures/petstore.json");
-        // let spec: OpenAPI = serde_json::from_str(spec).expect("Could not deserialize input");
         let mut spec: OpenAPI = Default::default();
 
         let mut components = Components::default();
