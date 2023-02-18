@@ -61,7 +61,7 @@ pub(crate) fn into_type(
                 }
 
                 for (key, value) in o.properties.iter() {
-                    let s = value.as_item().unwrap();
+                    let s = refs.resolve(value).unwrap();
 
                     let new_thing_is_array =
                         matches!(&s.schema_kind, SchemaKind::Type(Type::Array(_)));

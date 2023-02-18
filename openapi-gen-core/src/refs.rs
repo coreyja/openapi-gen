@@ -4,9 +4,7 @@ use regex::Regex;
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
 
 pub(crate) trait Refable: Sized {
-    type ReferenceTo: From<Self>;
-
-    fn resolve<'a>(refs: &'a Components, r: &'a str) -> Result<&'a Self::ReferenceTo, String>;
+    fn resolve<'a>(refs: &'a Components, r: &'a str) -> Result<&'a Self, String>;
 
     fn regex() -> Regex;
 
@@ -20,10 +18,10 @@ pub(crate) trait Refable: Sized {
 }
 
 impl ReferenceableAPI {
-    pub(crate) fn resolve<'a, T, X>(&'a self, r: &'a ReferenceOr<T>) -> Result<&'a T, String>
-    where
-        T: Refable<ReferenceTo = X>,
-    {
+    pub(crate) fn resolve<'a, T: Refable>(
+        &'a self,
+        r: &'a ReferenceOr<T>,
+    ) -> Result<&'a T, String> {
         match r {
             ReferenceOr::Reference { reference } => {
                 let components = self
@@ -39,8 +37,6 @@ impl ReferenceableAPI {
 }
 
 impl Refable for Schema {
-    type ReferenceTo = Self;
-
     fn regex() -> Regex {
         let reg: Regex = regex::Regex::new(r"#/components/schemas/(.*)").unwrap();
         reg
@@ -55,18 +51,6 @@ impl Refable for Schema {
             .ok_or_else(|| format!("Schema not found for: {}", name))?;
 
         Ok(s.as_item().unwrap())
-    }
-}
-
-impl Refable for Box<Schema> {
-    type ReferenceTo = Schema;
-
-    fn resolve<'a>(refs: &'a Components, r: &'a str) -> Result<&'a Self::ReferenceTo, String> {
-        Schema::resolve(refs, r)
-    }
-
-    fn regex() -> Regex {
-        Schema::regex()
     }
 }
 
