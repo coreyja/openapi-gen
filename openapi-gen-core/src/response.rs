@@ -4,7 +4,7 @@ use inflector::Inflector;
 use super::*;
 
 impl IntoMod for Responses {
-    fn into_mod(self) -> syn::ItemMod {
+    fn as_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
         let mut response_enum: ItemEnum = parse_quote! {
           #[doc="Test this Response"]
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -22,13 +22,18 @@ impl IntoMod for Responses {
 
         let mut structs: Vec<ItemStruct> = vec![];
         let mut header_structs: Vec<ItemStruct> = vec![];
-        for (status_code, resp) in self.responses {
-            let resp = resp.as_item().unwrap();
+        for (status_code, resp) in &self.responses {
+            let resp = refs.resolve(resp).unwrap();
+
             let variant_ident = format_ident!("_{status_code}");
             let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(content, &mut structs, status_code.clone(), &struct_ident);
+            let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
+
+            response_enum.variants.push(parse_quote! {
+              #variant_ident(#ty)
+            });
 
             let header_struct_ident = format!("Headers{status_code}");
             let header_struct_ident = format_ident!("{}", header_struct_ident);
@@ -43,12 +48,12 @@ impl IntoMod for Responses {
                     else { panic!("This should always be named cause we just made the struct") };
 
                 for (header_name, header) in headers {
-                    let header = header.as_item().unwrap();
+                    let header = refs.resolve(header).unwrap();
                     let field_ident = format_ident!("{}", header_name.to_snake_case());
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
-                    let schema = schema.as_item().unwrap();
+                    let schema = refs.resolve(schema).unwrap();
 
-                    let field_ty = schema.as_type(&mut header_structs, header_name, 0);
+                    let field_ty = schema.as_type(refs, &mut header_structs, header_name, 0);
 
                     header_fields.named.push(
                         syn::Field::parse_named
@@ -62,10 +67,6 @@ impl IntoMod for Responses {
                     #variant_ident(#header_struct_ident)
                 });
             }
-
-            response_enum.variants.push(parse_quote! {
-              #variant_ident(#ty)
-            });
         }
 
         contents.push(response_enum.into());
@@ -84,23 +85,27 @@ impl IntoMod for Responses {
 }
 
 pub(crate) fn content_to_tokens(
+    refs: &ReferenceableAPI,
     content: &IndexMap<String, MediaType>,
     structs: &mut Vec<ItemStruct>,
-    status_code: StatusCode,
     struct_ident: &str,
 ) -> TokenStream {
+    if content.is_empty() {
+        return quote! { () };
+    }
+
     let json_content = content.get("application/json").unwrap().clone();
 
     if let Some(schema) = json_content.schema {
-        let schema = schema.as_item().unwrap();
+        let schema = refs.resolve(&schema).unwrap();
 
-        schema.as_type(structs, &struct_ident, 0)
+        schema.as_type(refs, structs, struct_ident, 0)
     } else {
         let mut iter = json_content.examples.into_iter();
-        let item = iter.next().unwrap();
-        let example_value = item.1.into_item();
-        let example_value = example_value.unwrap().value.unwrap();
+        let (_name, example_value) = iter.next().unwrap();
+        let example_value = refs.resolve(&example_value).unwrap();
+        let example_value = example_value.value.unwrap();
 
-        type_for(&example_value, structs, &struct_ident, 0)
+        type_for(refs, &example_value, structs, struct_ident, 0)
     }
 }

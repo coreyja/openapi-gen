@@ -1,42 +1,13 @@
 use openapi_gen_core::{api, MacroArgs};
-use quote::quote;
-use similar::{ChangeTag, TextDiff};
-use syn::{parse2, parse_file, parse_quote};
 
-fn assert_token_streams_match(
-    actual: proc_macro2::TokenStream,
-    expected: proc_macro2::TokenStream,
-) {
-    let string_actual = actual.to_string();
-    let string_expected = expected.to_string();
-
-    let parsed_file_actual = parse_file(&string_actual).unwrap();
-    let parsed_file_expected = parse_file(&string_expected).unwrap();
-
-    let formatted_actual = prettyplease::unparse(&parsed_file_actual);
-    let formatted_expected = prettyplease::unparse(&parsed_file_expected);
-
-    if formatted_actual != formatted_expected {
-        let diff = TextDiff::from_lines(&formatted_expected, &formatted_actual);
-
-        println!("Diff:");
-        for change in diff.iter_all_changes() {
-            let sign = match change.tag() {
-                ChangeTag::Delete => "-",
-                ChangeTag::Insert => "+",
-                ChangeTag::Equal => " ",
-            };
-            print!("{sign}{change}");
-        }
-
-        panic!("Token streams do not match");
-    }
-}
+mod utils;
+use syn::parse_quote;
+use utils::*;
 
 #[test]
 fn test_simple_site() {
     let args = MacroArgs {
-        path: "tests/simple_site.json".to_string(),
+        path: "../fixtures/simple_site.json".to_string(),
     };
     let input = quote::quote! {
         mod test {}
@@ -55,6 +26,8 @@ fn test_simple_site() {
               pub struct Headers {
                   pub RandomKey: String,
               }
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub struct PathParams {}
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Body {
                   pub foo: String,
@@ -95,6 +68,8 @@ fn test_simple_site() {
               pub struct QueryParams {}
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {}
+              #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+              pub struct PathParams {}
             }
             pub mod response {
               ///Test this Response
