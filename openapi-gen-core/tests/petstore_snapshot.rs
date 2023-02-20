@@ -19,6 +19,7 @@ fn test_petstore_snapshot() {
                 pub mod request {
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub struct QueryParams {
+                        ///How many items to return at one time (max 100)
                         pub limit: i64,
                     }
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -30,6 +31,7 @@ fn test_petstore_snapshot() {
                     ///Test this Response
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub enum Body {
+                        ///A paged array of pets
                         _200(Vec<Body200>),
                     }
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -44,6 +46,7 @@ fn test_petstore_snapshot() {
                     }
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub struct Headers200 {
+                        ///A link to the next page of responses
                         pub x_next: String,
                     }
                 }
@@ -62,6 +65,7 @@ fn test_petstore_snapshot() {
                     ///Test this Response
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub enum Body {
+                        ///Null response
                         _201(()),
                     }
                 }
@@ -77,6 +81,7 @@ fn test_petstore_snapshot() {
                     pub struct Headers {}
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub struct PathParams {
+                        ///The id of the pet to retrieve
                         pub petId: String,
                     }
                 }
@@ -84,6 +89,7 @@ fn test_petstore_snapshot() {
                     ///Test this Response
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                     pub enum Body {
+                        ///Expected response to a valid request
                         _200(Body200),
                     }
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]

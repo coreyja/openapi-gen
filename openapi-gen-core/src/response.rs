@@ -31,9 +31,12 @@ impl IntoMod for Responses {
             let struct_ident = format!("Body{status_code}");
             let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
 
-            response_enum.variants.push(parse_quote! {
-              #variant_ident(#ty)
-            });
+            let desc = &resp.description;
+            let variant: syn::Variant = parse_quote! {
+                #[doc = #desc]
+                #variant_ident(#ty)
+            };
+            response_enum.variants.push(variant);
 
             let header_struct_ident = format!("Headers{status_code}");
             let header_struct_ident = format_ident!("{}", header_struct_ident);
@@ -55,11 +58,15 @@ impl IntoMod for Responses {
 
                     let field_ty = schema.as_type(refs, &mut header_structs, header_name, 0);
 
-                    header_fields.named.push(
-                        syn::Field::parse_named
-                            .parse2(quote::quote! { pub #field_ident: #field_ty })
-                            .unwrap(),
-                    );
+                    let mut field = syn::Field::parse_named
+                        .parse2(quote::quote! { pub #field_ident: #field_ty })
+                        .unwrap();
+                    if let Some(desc) = &header.description {
+                        field.attrs.push(parse_quote! {
+                            #[doc = #desc]
+                        });
+                    };
+                    header_fields.named.push(field);
                 }
 
                 header_structs.push(header_struct);

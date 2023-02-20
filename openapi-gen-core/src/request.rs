@@ -87,16 +87,21 @@ fn add_field_for_param(
     let name = &parameter_data.name;
     let ident = format_ident!("{name}");
 
+    let desc = &parameter_data.description;
     if let ParameterSchemaOrContent::Schema(s) = &parameter_data.format {
         let s = refs.resolve(s).unwrap();
 
         let ty = s.as_type(refs, structs, default_struct_name, 0);
 
-        struct_fields.named.push(
-            syn::Field::parse_named
-                .parse2(quote::quote! { pub #ident: #ty })
-                .unwrap(),
-        );
+        let mut field = syn::Field::parse_named
+            .parse2(quote::quote! {
+                pub #ident: #ty
+            })
+            .unwrap();
+        if let Some(desc) = desc {
+            field.attrs.push(parse_quote!(#[doc = #desc]));
+        }
+        struct_fields.named.push(field);
     } else {
         todo!("Need to handle cases where we have the nested content instead of a schema")
     }
