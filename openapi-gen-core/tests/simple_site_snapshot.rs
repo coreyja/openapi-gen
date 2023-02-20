@@ -14,14 +14,17 @@ fn test_simple_site() {
     let expected = parse_quote! {
       mod test {
         pub mod test_more {
+          ///Test summary
           pub mod post {
             pub mod request {
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct QueryParams {
+                  ///Test parameter
                   pub test: InnerParam,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers {
+                  ///Something passed as a header
                   pub RandomKey: String,
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -41,6 +44,7 @@ fn test_simple_site() {
               ///Test this Response
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub enum Body {
+                  ///200 response
                   _200(Body200),
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -54,12 +58,14 @@ fn test_simple_site() {
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub struct Headers200 {
+                  ///Test header
                   pub x_test: String,
               }
             }
           }
         }
         pub mod root {
+          ///List API versions
           pub mod get {
             pub mod request {
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -73,6 +79,7 @@ fn test_simple_site() {
               ///Test this Response
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
               pub enum Body {
+                  ///200 response
                   _200(Body200),
               }
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
