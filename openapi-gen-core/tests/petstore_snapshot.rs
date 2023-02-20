@@ -14,6 +14,7 @@ fn test_petstore_snapshot() {
     let expected = parse_quote! {
       mod test {
         pub mod pets {
+            /// List all pets
             pub mod get {
                 pub mod request {
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -47,6 +48,7 @@ fn test_petstore_snapshot() {
                     }
                 }
             }
+            /// Create a pet
             pub mod post {
                 pub mod request {
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -66,6 +68,7 @@ fn test_petstore_snapshot() {
             }
         }
         pub mod pets_petid {
+            /// Info for a specific pet
             pub mod get {
                 pub mod request {
                     #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
