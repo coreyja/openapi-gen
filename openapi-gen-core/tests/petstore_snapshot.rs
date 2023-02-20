@@ -8,9 +8,7 @@ use utils::*;
 fn test_petstore_snapshot() {
     let args = MacroArgs {
         path: "../fixtures/petstore.json".to_string(),
-    };
-    let input = quote::quote! {
-        mod test {}
+        name: Some("test".to_string()),
     };
 
     let expected = parse_quote! {
@@ -97,5 +95,5 @@ fn test_petstore_snapshot() {
       }
     };
 
-    assert_token_streams_match(api(args, input), expected);
+    assert_token_streams_match(api(args), expected);
 }

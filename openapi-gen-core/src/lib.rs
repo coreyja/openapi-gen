@@ -14,7 +14,7 @@ use std::fs;
 use darling::FromMeta;
 use openapiv3::*;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, quote_spanned};
+use quote::{format_ident, quote};
 use serde_json::Value;
 use syn::{parse::Parser, parse_quote, Fields, ItemEnum, ItemMod, ItemStruct};
 
@@ -53,6 +53,8 @@ trait IntoMod {
 pub struct MacroArgs {
     /// Path, relative to the crate root, to the OpenAPI spec
     pub path: String,
+    /// Optional name for the generated module. If not provided, the name will be inferred from the OpenAPI spec
+    pub name: Option<String>,
 }
 
 /// Inner Function for the `#[api]` proc-macro
@@ -63,31 +65,23 @@ pub struct MacroArgs {
 /// The input token stream is a module that the generated code will be placed in.
 /// Since this is expected to be run as a proc-macro, the input is expected to parse to a `syn::ItemMod`
 /// and it returns a `syn::ItemMod` [converted to a TokenStream] for the same module with the generated code added to it.
-pub fn api(args: MacroArgs, input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-    let mut item_mod = match syn::parse2::<syn::ItemMod>(input) {
-        Ok(syntax_tree) => syntax_tree,
-        Err(err) => return err.to_compile_error(),
-    };
-
+pub fn api(args: MacroArgs) -> proc_macro2::TokenStream {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let path = format!("{}/{}", manifest_dir, args.path);
     let contents = fs::read_to_string(path);
     if contents.is_err() {
-        return quote_spanned! {
-          item_mod.ident.span() =>
-            compile_error!("File not found");
+        return quote! {
+            compile_error!("File not found")
         };
     }
     let contents = contents.unwrap();
 
     let openapi: OpenAPI = serde_json::from_str(&contents).expect("Could not deserialize input");
 
-    if item_mod.content.is_none() {
-        return quote_spanned! {
-          item_mod.ident.span() =>
-            compile_error!("Non-inline modules are not supported")
-        };
-    }
+    let outer_mod_name = format_ident!("{}", args.name.unwrap_or_else(|| "openapi".to_string()));
+    let mut item_mod: syn::ItemMod = parse_quote! {
+        mod #outer_mod_name {}
+    };
 
     let refable = ReferenceableAPI(openapi);
 
