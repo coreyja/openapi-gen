@@ -8,9 +8,7 @@ use utils::*;
 fn test_simple_site() {
     let args = MacroArgs {
         path: "../fixtures/simple_site.json".to_string(),
-    };
-    let input = quote::quote! {
-        mod test {}
+        name: Some("test".to_string()),
     };
 
     let expected = parse_quote! {
@@ -99,5 +97,5 @@ fn test_simple_site() {
       }
     };
 
-    assert_token_streams_match(api(args, input), expected);
+    assert_token_streams_match(api(args), expected);
 }

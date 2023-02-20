@@ -25,10 +25,11 @@ pub(crate) trait Refable: Sized + Clone {
     fn regex_string() -> &'static str;
 
     fn name(r: &str) -> Result<&str, String> {
-        let reg: Regex = regex::Regex::new(Self::regex_string()).unwrap();
+        let regex_string = Self::regex_string();
+        let reg: Regex = regex::Regex::new(regex_string).unwrap();
         let m = reg
             .captures(r)
-            .ok_or_else(|| "Reference does not match regex for Schema".to_owned())?;
+            .ok_or_else(|| format!("Reference {r} does not match regex string {}", regex_string))?;
         Ok(m.get(1).unwrap().as_str())
     }
 }

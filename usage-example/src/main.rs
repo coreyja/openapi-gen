@@ -1,10 +1,6 @@
 use openapi_gen_macro::api;
 
-#[api(path = "../fixtures/simple_site.json")]
-mod some_site {}
-
-#[api(path = "../fixtures/petstore.json")]
-mod petstore {}
+api!(path = "../fixtures/simple_site.json", name = "some_site");
 
 fn main() {
     let _ = some_site::test_more::post::request::Body {
