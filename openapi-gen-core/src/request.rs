@@ -12,11 +12,6 @@ impl AsRequestMod for Operation {
         settings.with_type_mod("my_fake_mod");
         let mut types = TypeSpace::new(&settings);
 
-        let mut request_mod: syn::ItemMod = parse_quote! {
-            pub mod request {}
-        };
-        let content = &mut request_mod.content.as_mut().unwrap().1;
-
         if let Some(request_body) = &self.request_body {
             let request_body = refs.resolve(request_body).unwrap();
 
@@ -65,6 +60,14 @@ impl AsRequestMod for Operation {
                 Parameter::Cookie { .. } => todo!(),
             };
         }
+
+        let types_content = types.to_stream();
+        let mut request_mod: syn::ItemMod = parse_quote! {
+            pub mod request {
+              #types_content
+            }
+        };
+        let content = &mut request_mod.content.as_mut().unwrap().1;
 
         content.push(param_struct.into());
         content.push(headers_struct.into());
