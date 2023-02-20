@@ -14,6 +14,7 @@ fn test_simple_site() {
     let expected = parse_quote! {
       mod test {
         pub mod test_more {
+          ///Test summary
           pub mod post {
             pub mod request {
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -60,6 +61,7 @@ fn test_simple_site() {
           }
         }
         pub mod root {
+          ///List API versions
           pub mod get {
             pub mod request {
               #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]

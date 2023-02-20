@@ -6,9 +6,13 @@ impl IntoMod for (&str, &Operation) {
 
         let ident = ident.to_ascii_lowercase();
         let ident = format_ident!("{ident}");
+
         let mut operation_mod: ItemMod = parse_quote! {
           pub mod #ident {}
         };
+        if let Some(summary) = &operation.summary {
+            operation_mod.attrs.push(parse_quote!(#[doc = #summary]));
+        }
 
         let content = &mut operation_mod.content.as_mut().unwrap().1;
 
