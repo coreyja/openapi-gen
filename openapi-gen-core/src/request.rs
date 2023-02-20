@@ -1,3 +1,5 @@
+use typify::{TypeSpace, TypeSpaceSettings};
+
 use super::*;
 
 pub(crate) trait AsRequestMod {
@@ -6,16 +8,19 @@ pub(crate) trait AsRequestMod {
 
 impl AsRequestMod for Operation {
     fn as_request_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
+        let mut settings = TypeSpaceSettings::default();
+        settings.with_type_mod("my_fake_mod");
+        let mut types = TypeSpace::new(&settings);
+
         let mut request_mod: syn::ItemMod = parse_quote! {
             pub mod request {}
         };
         let content = &mut request_mod.content.as_mut().unwrap().1;
-        let mut structs: Vec<ItemStruct> = vec![];
 
         if let Some(request_body) = &self.request_body {
             let request_body = refs.resolve(request_body).unwrap();
 
-            content_to_tokens(refs, &request_body.content, &mut structs, "Body");
+            content_to_tokens(refs, &mut types, &request_body.content, "Body");
         }
 
         let mut param_struct: ItemStruct = parse_quote! {
@@ -41,26 +46,22 @@ impl AsRequestMod for Operation {
                 Parameter::Query { parameter_data, .. } => {
                     add_field_for_param(
                         refs,
+                        &mut types,
                         &parameter_data,
-                        &mut structs,
                         struct_fields,
                         "InnerParam",
                     );
                 }
                 Parameter::Header { parameter_data, .. } => add_field_for_param(
                     refs,
+                    &mut types,
                     &parameter_data,
-                    &mut structs,
                     header_fields,
                     "InnerHeader",
                 ),
-                Parameter::Path { parameter_data, .. } => add_field_for_param(
-                    refs,
-                    &parameter_data,
-                    &mut structs,
-                    path_fields,
-                    "InnerPath",
-                ),
+                Parameter::Path { parameter_data, .. } => {
+                    add_field_for_param(refs, &mut types, &parameter_data, path_fields, "InnerPath")
+                }
                 Parameter::Cookie { .. } => todo!(),
             };
         }
@@ -69,18 +70,14 @@ impl AsRequestMod for Operation {
         content.push(headers_struct.into());
         content.push(path_struct.into());
 
-        for i in structs {
-            content.push(i.into())
-        }
-
         request_mod
     }
 }
 
 fn add_field_for_param(
     refs: &ReferenceableAPI,
+    types: &mut TypeSpace,
     parameter_data: &ParameterData,
-    structs: &mut Vec<ItemStruct>,
     struct_fields: &mut syn::FieldsNamed,
     default_struct_name: &str,
 ) {
@@ -91,7 +88,7 @@ fn add_field_for_param(
     if let ParameterSchemaOrContent::Schema(s) = &parameter_data.format {
         let s = refs.resolve(s).unwrap();
 
-        let ty = s.as_type(refs, structs, default_struct_name, 0);
+        let ty = s.as_type(types, default_struct_name);
 
         let mut field = syn::Field::parse_named
             .parse2(quote::quote! {

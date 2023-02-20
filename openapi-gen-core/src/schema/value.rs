@@ -47,9 +47,11 @@ pub(crate) fn type_for_value(value: &Value) -> Type {
                 properties.push((key.to_owned(), s));
             }
 
+            let keys = o.keys().cloned().collect();
+
             Type::Object(ObjectType {
                 properties: properties.into_iter().collect(),
-                required: vec![],
+                required: keys,
                 additional_properties: None,
                 min_properties: None,
                 max_properties: None,
@@ -58,14 +60,19 @@ pub(crate) fn type_for_value(value: &Value) -> Type {
     }
 }
 
-pub(crate) fn type_for(
-    refs: &ReferenceableAPI,
-    value: &Value,
-    new_structs: &mut Vec<ItemStruct>,
-    name: &str,
-    count: usize,
-) -> TokenStream {
+pub(crate) fn type_for(types: &mut TypeSpace, value: &Value, name: &str) -> TokenStream {
     let openapi_type = type_for_value(value);
 
-    into_type(refs, &openapi_type, new_structs, name, count)
+    let schema = Schema {
+        schema_data: Default::default(),
+        schema_kind: SchemaKind::Type(openapi_type),
+    };
+    let schema = schema.to_schema();
+    let tid = types
+        .add_type_with_name(&schema, Some(name.to_string()))
+        .unwrap();
+
+    let t = types.get_type(&tid).unwrap();
+    dbg!(&t);
+    t.ident()
 }

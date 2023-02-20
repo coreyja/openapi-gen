@@ -1,10 +1,15 @@
 use indexmap::IndexMap;
 use inflector::Inflector;
+use typify::{TypeSpace, TypeSpaceSettings};
 
 use super::*;
 
 impl IntoMod for Responses {
     fn as_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
+        let mut settings = TypeSpaceSettings::default();
+        settings.with_type_mod("self");
+        let mut types = TypeSpace::new(&settings);
+
         let mut response_enum: ItemEnum = parse_quote! {
           #[doc="Test this Response"]
           #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -15,12 +20,6 @@ impl IntoMod for Responses {
           pub enum Headers { }
         };
 
-        let mut response_mod: syn::ItemMod = parse_quote! {
-            pub mod response {}
-        };
-        let contents = &mut response_mod.content.as_mut().unwrap().1;
-
-        let mut structs: Vec<ItemStruct> = vec![];
         let mut header_structs: Vec<ItemStruct> = vec![];
         for (status_code, resp) in &self.responses {
             let resp = refs.resolve(resp).unwrap();
@@ -29,7 +28,7 @@ impl IntoMod for Responses {
             let content = &resp.content;
 
             let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(refs, content, &mut structs, &struct_ident);
+            let ty = content_to_tokens(refs, &mut types, content, &struct_ident);
 
             let desc = &resp.description;
             let variant: syn::Variant = parse_quote! {
@@ -56,7 +55,7 @@ impl IntoMod for Responses {
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
                     let schema = refs.resolve(schema).unwrap();
 
-                    let field_ty = schema.as_type(refs, &mut header_structs, header_name, 0);
+                    let field_ty = schema.as_type(&mut types, header_name);
 
                     let mut field = syn::Field::parse_named
                         .parse2(quote::quote! { pub #field_ident: #field_ty })
@@ -76,12 +75,17 @@ impl IntoMod for Responses {
             }
         }
 
+        let types_content = types.to_stream();
+        let mut response_mod: syn::ItemMod = parse_quote! {
+            pub mod response {
+              #types_content
+            }
+        };
+        let contents = &mut response_mod.content.as_mut().unwrap().1;
+
         contents.push(response_enum.into());
         if !header_structs.is_empty() {
             contents.push(headers_enum.into());
-        }
-        for s in structs {
-            contents.push(s.into());
         }
         for s in header_structs {
             contents.push(s.into());
@@ -93,8 +97,8 @@ impl IntoMod for Responses {
 
 pub(crate) fn content_to_tokens(
     refs: &ReferenceableAPI,
+    types: &mut TypeSpace,
     content: &IndexMap<String, MediaType>,
-    structs: &mut Vec<ItemStruct>,
     struct_ident: &str,
 ) -> TokenStream {
     if content.is_empty() {
@@ -106,13 +110,13 @@ pub(crate) fn content_to_tokens(
     if let Some(schema) = json_content.schema {
         let schema = refs.resolve(&schema).unwrap();
 
-        schema.as_type(refs, structs, struct_ident, 0)
+        schema.as_type(types, struct_ident)
     } else {
         let mut iter = json_content.examples.into_iter();
         let (_name, example_value) = iter.next().unwrap();
         let example_value = refs.resolve(&example_value).unwrap();
         let example_value = example_value.value.unwrap();
 
-        type_for(refs, &example_value, structs, struct_ident, 0)
+        type_for(types, &example_value, struct_ident)
     }
 }
