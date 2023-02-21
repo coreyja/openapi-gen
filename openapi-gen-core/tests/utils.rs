@@ -1,6 +1,37 @@
+use std::{fs, path::PathBuf};
+
+use openapi_gen_core::{api, MacroArgs};
 use similar::{ChangeTag, TextDiff};
 use syn::parse_file;
 
+pub fn test_fixture_snapshot(fixture_name: &str) {
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("../fixtures/");
+    path.push(fixture_name);
+
+    let args_path = path.to_str().unwrap().to_string();
+    dbg!(&args_path);
+    let args = MacroArgs {
+        path: format!("../fixtures/{fixture_name}"),
+        name: Some("test".to_string()),
+    };
+    let actual = api(args);
+
+    let mut expected_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    expected_path.push("tests/snapshots");
+    expected_path.push(fixture_name);
+
+    let expected_path = expected_path.with_extension("expected.rs");
+
+    if option_env!("CREATE_SNAPSHOTS").is_some() {
+        std::fs::write(&expected_path, actual.to_string()).unwrap();
+    }
+
+    let expected_content = fs::read_to_string(&expected_path).unwrap();
+    let expected = expected_content.parse().unwrap();
+
+    assert_token_streams_match(actual, expected)
+}
 pub fn assert_token_streams_match(
     actual: proc_macro2::TokenStream,
     expected: proc_macro2::TokenStream,
