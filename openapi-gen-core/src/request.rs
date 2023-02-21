@@ -21,52 +21,30 @@ impl AsRequestMod for Operation {
             content_to_tokens(refs, &mut types, &request_body.content, "Body");
         }
 
-        let mut param_struct: ItemStruct = parse_quote! {
-          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-          pub struct QueryParams {}
-        };
-        let mut headers_struct: ItemStruct = parse_quote! {
-          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-          pub struct Headers {}
-        };
-        let mut path_struct: ItemStruct = parse_quote! {
-          #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-          pub struct PathParams {}
-        };
-
-        let Fields::Named(ref mut struct_fields) = param_struct.fields else { panic!("This should always be named cause we just made the struct") };
-        let Fields::Named(ref mut header_fields) = headers_struct.fields else { panic!("This should always be named cause we just made the struct") };
-        let Fields::Named(ref mut path_fields) = path_struct.fields else { panic!("This should always be named cause we just made the struct") };
-
-        for param in &self.parameters {
-            let param = refs.resolve(param).unwrap();
-            match param {
-                Parameter::Query { parameter_data, .. } => {
-                    add_field_for_param(&mut types, &parameter_data, struct_fields, "InnerParam");
-                }
-                Parameter::Header { parameter_data, .. } => {
-                    add_field_for_param(&mut types, &parameter_data, header_fields, "InnerHeader")
-                }
-                Parameter::Path { parameter_data, .. } => {
-                    add_field_for_param(&mut types, &parameter_data, path_fields, "InnerPath")
-                }
-                Parameter::Cookie { .. } => todo!(),
-            };
-        }
+        let params: Vec<Parameter> = self
+            .parameters
+            .iter()
+            .map(|p| refs.resolve(p).unwrap())
+            .collect();
+        let schemas: ParamSchemas = params.into();
+        schemas.cookie.add_type(&mut types, "Cookies");
+        schemas.query.add_type(&mut types, "QueryParams");
+        schemas.path.add_type(&mut types, "PathParams");
+        schemas.header.add_type(&mut types, "Headers");
 
         let types_content = types.to_stream();
-        let mut request_mod: syn::ItemMod = parse_quote! {
+        let request_mod: syn::ItemMod = parse_quote! {
             pub mod request {
               use serde::{Serialize, Deserialize};
 
               #types_content
             }
         };
-        let content = &mut request_mod.content.as_mut().unwrap().1;
+        // let content = &mut request_mod.content.as_mut().unwrap().1;
 
-        content.push(param_struct.into());
-        content.push(headers_struct.into());
-        content.push(path_struct.into());
+        // content.push(param_struct.into());
+        // content.push(headers_struct.into());
+        // content.push(path_struct.into());
 
         request_mod
     }

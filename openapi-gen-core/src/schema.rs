@@ -9,9 +9,18 @@ pub(crate) use value::*;
 mod headers;
 pub use headers::*;
 
+mod parameters;
+pub use parameters::*;
+
 mod to_schema;
 pub(crate) trait IntoType {
     fn as_type(&self, types: &mut TypeSpace, name: &str) -> TokenStream;
+}
+
+impl ToSchema for schemars::schema::Schema {
+    fn to_schema(&self) -> schemars::schema::Schema {
+        self.clone()
+    }
 }
 
 impl<T> IntoType for T
