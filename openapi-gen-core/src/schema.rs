@@ -1,4 +1,4 @@
-use self::to_schema::ToSchema;
+pub use self::to_schema::ToSchema;
 
 use super::*;
 
@@ -14,13 +14,13 @@ pub(crate) trait IntoType {
 impl IntoType for Schema {
     fn as_type(&self, types: &mut TypeSpace, new_struct_name: &str) -> TokenStream {
         let schema: schemars::schema::Schema = self.clone().to_schema();
+        dbg!(&schema);
 
         let tid = types
             .add_type_with_name(&schema, Some(new_struct_name.to_string()))
             .unwrap();
 
         let t = types.get_type(&tid).unwrap();
-        dbg!(&t);
         t.ident()
         // match &self.schema_kind {
         //     SchemaKind::Type(t) => into_type(refs, t, new_structs, new_struct_name, count),

@@ -9,8 +9,11 @@ pub(crate) trait AsRequestMod {
 impl AsRequestMod for Operation {
     fn as_request_mod(&self, refs: &ReferenceableAPI) -> syn::ItemMod {
         let mut settings = TypeSpaceSettings::default();
-        settings.with_type_mod("my_fake_mod");
+        settings.with_type_mod("self");
+        settings.with_derive("PartialEq".to_owned());
         let mut types = TypeSpace::new(&settings);
+
+        refs.add_reference_schemas(&mut types).unwrap();
 
         if let Some(request_body) = &self.request_body {
             let request_body = refs.resolve(request_body).unwrap();
@@ -64,6 +67,8 @@ impl AsRequestMod for Operation {
         let types_content = types.to_stream();
         let mut request_mod: syn::ItemMod = parse_quote! {
             pub mod request {
+              use serde::{Serialize, Deserialize};
+
               #types_content
             }
         };

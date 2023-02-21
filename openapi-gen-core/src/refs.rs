@@ -5,8 +5,22 @@ use openapiv3::{
     Components, Example, Header, OpenAPI, Parameter, ReferenceOr, RequestBody, Response, Schema,
 };
 use regex::Regex;
+use typify::TypeSpace;
+
+use crate::schema::ToSchema;
 
 pub(crate) struct ReferenceableAPI(pub OpenAPI);
+
+impl ReferenceableAPI {
+    pub(crate) fn add_reference_schemas(&self, types: &mut TypeSpace) -> Result<(), String> {
+        if let Ok(components) = self.components() {
+            types
+                .add_ref_types(components.schemas.iter().map(|(k, v)| (k, v.to_schema())))
+                .map_err(|_| "Failed to add types".to_string())?;
+        }
+        Ok(())
+    }
+}
 
 pub(crate) trait Refable: Sized + Clone {
     fn resolve<'a>(refs: &'a ReferenceableAPI, r: &'a str) -> Result<Self, String> {
