@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 
 use indexmap::IndexMap;
 use openapiv3::{
-    Components, Example, Header, OpenAPI, Parameter, ReferenceOr, RequestBody, Response, Schema,
+    Components, Example, Header, OpenAPI, Parameter, ReferenceOr, RequestBody, Response,
 };
 use regex::Regex;
 use typify::TypeSpace;
@@ -72,16 +72,6 @@ impl ReferenceableAPI {
     }
 }
 
-impl Refable for Schema {
-    fn regex_string() -> &'static str {
-        r"#/components/schemas/(.*)"
-    }
-
-    fn get_index_map(components: &Components) -> &IndexMap<String, ReferenceOr<Self>> {
-        &components.schemas
-    }
-}
-
 impl Refable for RequestBody {
     fn regex_string() -> &'static str {
         r"#/components/requestBodies/(.*)"
@@ -146,21 +136,37 @@ mod tests {
             schema_data: Default::default(),
             schema_kind: openapiv3::SchemaKind::Type(openapiv3::Type::Boolean {}),
         };
+        let param: Parameter = Parameter::Query {
+            parameter_data: openapiv3::ParameterData {
+                name: "Test".to_string(),
+                description: None,
+                required: true,
+                deprecated: None,
+                format: openapiv3::ParameterSchemaOrContent::Schema(ReferenceOr::Item(schema)),
+                example: None,
+                examples: Default::default(),
+                explode: None,
+                extensions: Default::default(),
+            },
+            allow_reserved: false,
+            style: Default::default(),
+            allow_empty_value: Default::default(),
+        };
         components
-            .schemas
-            .insert("Error".to_string(), ReferenceOr::Item(schema.clone()));
+            .parameters
+            .insert("FooBar".to_string(), ReferenceOr::Item(param.clone()));
         spec.components = Some(components);
         let spec = ReferenceableAPI(spec);
 
         assert_eq!(
-            spec.resolve(&ReferenceOr::<Schema>::Reference {
-                reference: "#/components/schemas/Error".to_owned()
+            spec.resolve(&ReferenceOr::<Parameter>::Reference {
+                reference: "#/components/parameters/FooBar".to_owned()
             }),
-            Ok(schema)
+            Ok(param)
         );
         assert_eq!(
-            spec.resolve(&ReferenceOr::<Schema>::Reference {
-                reference: "#/components/schemas/Other".to_owned()
+            spec.resolve(&ReferenceOr::<Parameter>::Reference {
+                reference: "#/components/parameters/Other".to_owned()
             }),
             Err("Schema not found for: Other".to_string())
         );

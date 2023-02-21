@@ -56,7 +56,6 @@ impl IntoMod for Responses {
                     let header = refs.resolve(header).unwrap();
                     let field_ident = format_ident!("{}", header_name.to_snake_case());
                     let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
-                    let schema = refs.resolve(schema).unwrap();
 
                     let field_ty = schema.as_type(&mut types, header_name);
 
@@ -113,8 +112,6 @@ pub(crate) fn content_to_tokens(
     let json_content = content.get("application/json").unwrap().clone();
 
     if let Some(schema) = json_content.schema {
-        let schema = refs.resolve(&schema).unwrap();
-
         schema.as_type(types, struct_ident)
     } else {
         let mut iter = json_content.examples.into_iter();

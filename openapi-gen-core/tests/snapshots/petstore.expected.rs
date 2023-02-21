@@ -60,7 +60,7 @@ mod test {
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Body {
                     ///A paged array of pets
-                    _200(Vec<self::Pet>),
+                    _200(self::Pets),
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Headers {
@@ -173,13 +173,6 @@ mod test {
             pub mod response {
                 use serde::{Serialize, Deserialize};
                 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-                pub struct Body200 {
-                    pub id: i64,
-                    pub name: String,
-                    #[serde(default, skip_serializing_if = "Option::is_none")]
-                    pub tag: Option<String>,
-                }
-                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
                 pub struct Error {
                     pub code: i32,
                     pub message: String,
@@ -203,7 +196,7 @@ mod test {
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Body {
                     ///Expected response to a valid request
-                    _200(self::Body200),
+                    _200(self::Pet),
                 }
             }
         }

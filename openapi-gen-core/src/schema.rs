@@ -11,9 +11,12 @@ pub(crate) trait IntoType {
     fn as_type(&self, types: &mut TypeSpace, name: &str) -> TokenStream;
 }
 
-impl IntoType for Schema {
+impl<T> IntoType for T
+where
+    T: ToSchema,
+{
     fn as_type(&self, types: &mut TypeSpace, new_struct_name: &str) -> TokenStream {
-        let schema: schemars::schema::Schema = self.clone().to_schema();
+        let schema: schemars::schema::Schema = self.to_schema();
         dbg!(&schema);
 
         let tid = types

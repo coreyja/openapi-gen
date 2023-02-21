@@ -42,23 +42,13 @@ impl AsRequestMod for Operation {
             let param = refs.resolve(param).unwrap();
             match param {
                 Parameter::Query { parameter_data, .. } => {
-                    add_field_for_param(
-                        refs,
-                        &mut types,
-                        &parameter_data,
-                        struct_fields,
-                        "InnerParam",
-                    );
+                    add_field_for_param(&mut types, &parameter_data, struct_fields, "InnerParam");
                 }
-                Parameter::Header { parameter_data, .. } => add_field_for_param(
-                    refs,
-                    &mut types,
-                    &parameter_data,
-                    header_fields,
-                    "InnerHeader",
-                ),
+                Parameter::Header { parameter_data, .. } => {
+                    add_field_for_param(&mut types, &parameter_data, header_fields, "InnerHeader")
+                }
                 Parameter::Path { parameter_data, .. } => {
-                    add_field_for_param(refs, &mut types, &parameter_data, path_fields, "InnerPath")
+                    add_field_for_param(&mut types, &parameter_data, path_fields, "InnerPath")
                 }
                 Parameter::Cookie { .. } => todo!(),
             };
@@ -83,7 +73,6 @@ impl AsRequestMod for Operation {
 }
 
 fn add_field_for_param(
-    refs: &ReferenceableAPI,
     types: &mut TypeSpace,
     parameter_data: &ParameterData,
     struct_fields: &mut syn::FieldsNamed,
@@ -94,8 +83,6 @@ fn add_field_for_param(
 
     let desc = &parameter_data.description;
     if let ParameterSchemaOrContent::Schema(s) = &parameter_data.format {
-        let s = refs.resolve(s).unwrap();
-
         let ty = s.as_type(types, default_struct_name);
 
         let mut field = syn::Field::parse_named
