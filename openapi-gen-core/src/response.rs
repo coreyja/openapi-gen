@@ -23,7 +23,6 @@ impl IntoMod for Responses {
           pub enum Headers { }
         };
 
-        let mut header_structs: Vec<ItemStruct> = vec![];
         for (status_code, resp) in &self.responses {
             let resp = refs.resolve(resp).unwrap();
 
@@ -40,39 +39,18 @@ impl IntoMod for Responses {
             };
             response_enum.variants.push(variant);
 
-            let header_struct_ident = format!("Headers{status_code}");
-            let header_struct_ident = format_ident!("{}", header_struct_ident);
             let headers = &resp.headers;
             if !headers.is_empty() {
-                let mut header_struct: ItemStruct = parse_quote! {
-                  #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                  pub struct #header_struct_ident {}
-                };
+                let header_name = format!("Headers{status_code}");
+                let schema = (refs, headers.clone()).to_schema();
+                let type_id = types
+                    .add_type_with_name(&schema, Some(header_name))
+                    .unwrap();
 
-                let Fields::Named(ref mut header_fields) = header_struct.fields
-                    else { panic!("This should always be named cause we just made the struct") };
-
-                for (header_name, header) in headers {
-                    let header = refs.resolve(header).unwrap();
-                    let field_ident = format_ident!("{}", header_name.to_snake_case());
-                    let ParameterSchemaOrContent::Schema(schema) = &header.format else { panic!("We only support schemas for headers for now")};
-
-                    let field_ty = schema.as_type(&mut types, header_name);
-
-                    let mut field = syn::Field::parse_named
-                        .parse2(quote::quote! { pub #field_ident: #field_ty })
-                        .unwrap();
-                    if let Some(desc) = &header.description {
-                        field.attrs.push(parse_quote! {
-                            #[doc = #desc]
-                        });
-                    };
-                    header_fields.named.push(field);
-                }
-
-                header_structs.push(header_struct);
+                let t = types.get_type(&type_id).unwrap();
+                let t_ident = t.ident();
                 headers_enum.variants.push(parse_quote! {
-                    #variant_ident(#header_struct_ident)
+                    #variant_ident(#t_ident)
                 });
             }
         }
@@ -88,11 +66,8 @@ impl IntoMod for Responses {
         let contents = &mut response_mod.content.as_mut().unwrap().1;
 
         contents.push(response_enum.into());
-        if !header_structs.is_empty() {
+        if !headers_enum.variants.is_empty() {
             contents.push(headers_enum.into());
-        }
-        for s in header_structs {
-            contents.push(s.into());
         }
 
         response_mod

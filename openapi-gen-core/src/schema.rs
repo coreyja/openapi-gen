@@ -6,6 +6,9 @@ mod value;
 use typify::TypeSpace;
 pub(crate) use value::*;
 
+mod headers;
+pub use headers::*;
+
 mod to_schema;
 pub(crate) trait IntoType {
     fn as_type(&self, types: &mut TypeSpace, name: &str) -> TokenStream;

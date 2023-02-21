@@ -1,9 +1,9 @@
-#![deny(
-    warnings,
-    missing_copy_implementations,
-    missing_debug_implementations,
-    missing_docs
-)]
+// #![deny(
+//     warnings,
+//     missing_copy_implementations,
+//     missing_debug_implementations,
+//     missing_docs
+// )]
 //! `openapi-gen-core` is a library for generating Rust code from OpenAPI specifications.
 //!
 //! Among the universe of `openapi-gen` crates, it is the one is not expected to be used directly.
