@@ -22,7 +22,12 @@ impl ToSchema for (&ReferenceableAPI, IndexMap<String, ReferenceOr<Header>>) {
             let ParameterSchemaOrContent::Schema(schema) = header.format else {
               todo!();
             };
-            let schema = schema.to_schema();
+            let mut schema = schema.to_schema();
+
+            let Schema::Object(x) = &mut schema else { todo!() };
+
+            let m = x.metadata();
+            m.description = header.description.clone();
 
             properties.insert(key.to_string(), schema);
 

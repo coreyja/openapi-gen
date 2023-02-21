@@ -17,24 +17,21 @@ mod test {
                     pub foo: Option<String>,
                 }
                 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-                pub struct InnerParam {
+                pub struct Headers {
+                    #[serde(rename = "RandomKey")]
+                    pub random_key: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct QueryParams {
+                    pub test: QueryParamsTest,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct QueryParamsTest {
                     #[serde(default, skip_serializing_if = "Option::is_none")]
                     pub bar: Option<String>,
                     #[serde(default, skip_serializing_if = "Option::is_none")]
                     pub foo: Option<String>,
                 }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct QueryParams {
-                    ///Test parameter
-                    pub test: self::InnerParam,
-                }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Headers {
-                    ///Something passed as a header
-                    pub RandomKey: String,
-                }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct PathParams {}
             }
             pub mod response {
                 use serde::{Serialize, Deserialize};
@@ -42,6 +39,16 @@ mod test {
                 pub struct Body200 {
                     pub id: String,
                     pub name: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Headers200 {
+                    ///Test header
+                    #[serde(
+                        rename = "X-Test",
+                        default,
+                        skip_serializing_if = "Option::is_none"
+                    )]
+                    pub x_test: Option<String>,
                 }
                 ///Test this Response
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -51,12 +58,7 @@ mod test {
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Headers {
-                    _200(Headers200),
-                }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Headers200 {
-                    ///Test header
-                    pub x_test: String,
+                    _200(self::Headers200),
                 }
             }
         }
@@ -66,12 +68,6 @@ mod test {
         pub mod get {
             pub mod request {
                 use serde::{Serialize, Deserialize};
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct QueryParams {}
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Headers {}
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct PathParams {}
             }
             pub mod response {
                 use serde::{Serialize, Deserialize};
