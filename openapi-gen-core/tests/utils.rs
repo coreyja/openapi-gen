@@ -24,7 +24,9 @@ pub fn test_fixture_snapshot(fixture_name: &str) {
     let expected_path = expected_path.with_extension("expected.rs");
 
     if option_env!("CREATE_SNAPSHOTS").is_some() {
-        std::fs::write(&expected_path, actual.to_string()).unwrap();
+        let parsed = parse_file(&actual.to_string()).unwrap();
+        let formatted = prettyplease::unparse(&parsed);
+        std::fs::write(&expected_path, formatted).unwrap();
     }
 
     let expected_content = fs::read_to_string(&expected_path).unwrap();

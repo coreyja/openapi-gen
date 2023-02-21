@@ -8,5 +8,5 @@ fn test_simple() {
 
 #[test]
 fn test_petshop() {
-    test_fixture_snapshot("petshop.json");
+    test_fixture_snapshot("petstore.json");
 }

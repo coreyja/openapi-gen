@@ -1,59 +1,102 @@
 mod test {
-    pub mod test_more {
-        ///Test summary
-        pub mod post {
+    pub mod pets {
+        ///List all pets
+        pub mod get {
             pub mod request {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
+                }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub struct QueryParams {
-                    ///Test parameter
-                    pub test: InnerParam,
+                    ///How many items to return at one time (max 100)
+                    pub limit: i32,
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Headers {
-                    ///Something passed as a header
-                    pub RandomKey: String,
-                }
+                pub struct Headers {}
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub struct PathParams {}
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Body {
-                    pub foo: String,
-                    pub bar: String,
-                }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct InnerParam {
-                    pub foo: String,
-                    pub bar: String,
-                }
             }
             pub mod response {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
+                }
                 ///Test this Response
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Body {
-                    ///200 response
-                    _200(Body200),
+                    ///A paged array of pets
+                    _200(Vec<self::Pet>),
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Headers {
                     _200(Headers200),
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Body200 {
-                    pub id: String,
-                    pub name: String,
-                }
-                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub struct Headers200 {
-                    ///Test header
-                    pub x_test: String,
+                    ///A link to the next page of responses
+                    pub x_next: String,
                 }
             }
         }
-    }
-    pub mod root {
-        ///List API versions
-        pub mod get {
+        ///Create a pet
+        pub mod post {
             pub mod request {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
+                }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub struct QueryParams {}
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
@@ -62,27 +105,105 @@ mod test {
                 pub struct PathParams {}
             }
             pub mod response {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
+                }
                 ///Test this Response
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Body {
-                    ///200 response
-                    _200(Body200),
+                    ///Null response
+                    _201(()),
+                }
+            }
+        }
+    }
+    pub mod pets_petid {
+        ///Info for a specific pet
+        pub mod get {
+            pub mod request {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Link {
-                    pub href: String,
-                    pub rel: String,
-                }
+                pub struct QueryParams {}
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
-                pub struct Version {
-                    pub status: String,
-                    pub updated: String,
-                    pub id: String,
-                    pub links: Vec<Link>,
-                }
+                pub struct Headers {}
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+                pub struct PathParams {
+                    ///The id of the pet to retrieve
+                    pub petId: String,
+                }
+            }
+            pub mod response {
+                use serde::{Serialize, Deserialize};
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
                 pub struct Body200 {
-                    pub versions: Vec<Version>,
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Error {
+                    pub code: i32,
+                    pub message: String,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pet {
+                    pub id: i64,
+                    pub name: String,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub tag: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct Pets(pub Vec<Pet>);
+                impl std::ops::Deref for Pets {
+                    type Target = Vec<Pet>;
+                    fn deref(&self) -> &Self::Target {
+                        &self.0
+                    }
+                }
+                ///Test this Response
+                #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
+                pub enum Body {
+                    ///Expected response to a valid request
+                    _200(self::Body200),
                 }
             }
         }
