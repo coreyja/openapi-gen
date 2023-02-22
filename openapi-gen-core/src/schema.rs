@@ -10,7 +10,7 @@ mod headers;
 pub use headers::*;
 
 mod parameters;
-pub use parameters::*;
+pub(crate) use parameters::*;
 
 mod to_schema;
 pub(crate) trait IntoType {

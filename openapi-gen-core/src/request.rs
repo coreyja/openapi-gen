@@ -49,30 +49,3 @@ impl AsRequestMod for Operation {
         request_mod
     }
 }
-
-fn add_field_for_param(
-    types: &mut TypeSpace,
-    parameter_data: &ParameterData,
-    struct_fields: &mut syn::FieldsNamed,
-    default_struct_name: &str,
-) {
-    let name = &parameter_data.name;
-    let ident = format_ident!("{name}");
-
-    let desc = &parameter_data.description;
-    if let ParameterSchemaOrContent::Schema(s) = &parameter_data.format {
-        let ty = s.as_type(types, default_struct_name);
-
-        let mut field = syn::Field::parse_named
-            .parse2(quote::quote! {
-                pub #ident: #ty
-            })
-            .unwrap();
-        if let Some(desc) = desc {
-            field.attrs.push(parse_quote!(#[doc = #desc]));
-        }
-        struct_fields.named.push(field);
-    } else {
-        todo!("Need to handle cases where we have the nested content instead of a schema")
-    }
-}

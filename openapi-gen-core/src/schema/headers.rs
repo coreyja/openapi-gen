@@ -1,15 +1,12 @@
-use std::{
-    collections::{BTreeMap, BTreeSet, HashSet},
-    default,
-};
+use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::IndexMap;
-use openapiv3::{Header, ObjectType, ParameterSchemaOrContent, ReferenceOr};
-use schemars::schema::{Metadata, ObjectValidation, Schema, SchemaObject};
+use openapiv3::{Header, ParameterSchemaOrContent, ReferenceOr};
+use schemars::schema::{ObjectValidation, Schema, SchemaObject};
 
 use crate::refs::ReferenceableAPI;
 
-use super::{IntoType, ToSchema};
+use super::ToSchema;
 
 impl ToSchema for (&ReferenceableAPI, IndexMap<String, ReferenceOr<Header>>) {
     fn to_schema(&self) -> schemars::schema::Schema {

@@ -1,5 +1,4 @@
 use indexmap::IndexMap;
-use inflector::Inflector;
 use typify::{TypeSpace, TypeSpaceSettings};
 
 use super::*;
