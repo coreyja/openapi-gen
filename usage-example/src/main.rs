@@ -8,7 +8,7 @@ fn main() {
         bar: None,
     };
     let _ = some_site::test_more::post::request::QueryParams {
-        test: some_site::test_more::post::request::InnerParam {
+        test: some_site::test_more::post::request::QueryParamsTest {
             foo: None,
             bar: Some("foo".to_string()),
         },
