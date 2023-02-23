@@ -9,7 +9,6 @@ pub fn test_fixture_snapshot(fixture_name: &str) {
     path.push("../fixtures/");
     path.push(fixture_name);
 
-    let args_path = path.to_str().unwrap().to_string();
     let args = MacroArgs {
         path: format!("../fixtures/{fixture_name}"),
         name: Some("test".to_string()),
