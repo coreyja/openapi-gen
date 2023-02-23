@@ -67,6 +67,8 @@ mod test {
                 pub enum Body {
                     ///A paged array of pets
                     _200(self::Pets),
+                    ///unexpected error
+                    Default(self::Error),
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Headers {
@@ -126,6 +128,8 @@ mod test {
                 pub enum Body {
                     ///Null response
                     _201(()),
+                    ///unexpected error
+                    Default(self::Error),
                 }
             }
         }
@@ -188,6 +192,8 @@ mod test {
                 pub enum Body {
                     ///Expected response to a valid request
                     _200(self::Pet),
+                    ///unexpected error
+                    Default(self::Error),
                 }
             }
         }
