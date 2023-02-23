@@ -41,6 +41,13 @@ mod test {
                     pub name: String,
                 }
                 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+                pub struct DefaultBody {
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub code: Option<i32>,
+                    #[serde(default, skip_serializing_if = "Option::is_none")]
+                    pub message: Option<String>,
+                }
+                #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
                 pub struct Headers200 {
                     ///Test header
                     #[serde(
@@ -55,6 +62,8 @@ mod test {
                 pub enum Body {
                     ///200 response
                     _200(self::Body200),
+                    ///Default Error Response
+                    Default(self::DefaultBody),
                 }
                 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq)]
                 pub enum Headers {

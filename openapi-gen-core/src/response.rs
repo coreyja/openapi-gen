@@ -25,33 +25,31 @@ impl IntoMod for Responses {
         for (status_code, resp) in &self.responses {
             let resp = refs.resolve(resp).unwrap();
 
-            let variant_ident = format_ident!("_{status_code}");
-            let content = &resp.content;
+            process_response(
+                resp,
+                refs,
+                &mut types,
+                &mut response_enum,
+                &mut headers_enum,
+                format_ident!("_{status_code}"),
+                format!("Headers{status_code}"),
+                format!("Body{status_code}"),
+            );
+        }
 
-            let struct_ident = format!("Body{status_code}");
-            let ty = content_to_tokens(refs, &mut types, content, &struct_ident);
+        if let Some(resp) = &self.default {
+            let resp = refs.resolve(resp).unwrap();
 
-            let desc = &resp.description;
-            let variant: syn::Variant = parse_quote! {
-                #[doc = #desc]
-                #variant_ident(#ty)
-            };
-            response_enum.variants.push(variant);
-
-            let headers = &resp.headers;
-            if !headers.is_empty() {
-                let header_name = format!("Headers{status_code}");
-                let schema = (refs, headers.clone()).to_schema();
-                let type_id = types
-                    .add_type_with_name(&schema, Some(header_name))
-                    .unwrap();
-
-                let t = types.get_type(&type_id).unwrap();
-                let t_ident = t.ident();
-                headers_enum.variants.push(parse_quote! {
-                    #variant_ident(#t_ident)
-                });
-            }
+            process_response(
+                resp,
+                refs,
+                &mut types,
+                &mut response_enum,
+                &mut headers_enum,
+                format_ident!("Default"),
+                "DefaultHeaders".to_owned(),
+                "DefaultBody".to_owned(),
+            );
         }
 
         let types_content = types.to_stream();
@@ -70,6 +68,44 @@ impl IntoMod for Responses {
         }
 
         response_mod
+    }
+}
+
+fn process_response(
+    resp: Response,
+    refs: &ReferenceableAPI,
+    types: &mut TypeSpace,
+    response_enum: &mut ItemEnum,
+    headers_enum: &mut ItemEnum,
+    variant_ident: syn::Ident,
+    header_name: String,
+    struct_name: String,
+) {
+    // let variant_ident = format_ident!("_{status_code}");
+    let content = &resp.content;
+
+    // let struct_ident = format!("Body{status_code}");
+    let ty = content_to_tokens(refs, types, content, &struct_name);
+
+    let desc = &resp.description;
+    let variant: syn::Variant = parse_quote! {
+        #[doc = #desc]
+        #variant_ident(#ty)
+    };
+    response_enum.variants.push(variant);
+
+    let headers = &resp.headers;
+    if !headers.is_empty() {
+        let schema = (refs, headers.clone()).to_schema();
+        let type_id = types
+            .add_type_with_name(&schema, Some(header_name))
+            .unwrap();
+
+        let t = types.get_type(&type_id).unwrap();
+        let t_ident = t.ident();
+        headers_enum.variants.push(parse_quote! {
+            #variant_ident(#t_ident)
+        });
     }
 }
 
