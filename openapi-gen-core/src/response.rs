@@ -52,8 +52,8 @@ impl IntoMod for Responses {
 
             let names = ResponseStructNames {
                 variant_ident: format_ident!("Default"),
-                struct_name: "BodyDefault".to_string(),
-                header_name: "HeadersDefault".to_string(),
+                struct_name: "DefaultBody".to_string(),
+                header_name: "DefaultHeaders".to_string(),
             };
 
             process_response(
