@@ -93,17 +93,12 @@ fn process_response(
     headers_enum: &mut ItemEnum,
     names: ResponseStructNames,
 ) {
-    let response_variant = to_response_variant(
-        &resp,
-        refs,
-        types,
-        names.variant_ident.clone(),
-        names.struct_name,
-    );
+    let response_variant =
+        to_response_variant(&resp, refs, types, &names.variant_ident, &names.struct_name);
     response_enum.variants.push(response_variant);
 
     let header_variant =
-        to_header_variant(resp, refs, types, names.variant_ident, names.header_name);
+        to_header_variant(resp, refs, types, &names.variant_ident, names.header_name);
     if let Some(header_variant) = header_variant {
         headers_enum.variants.push(header_variant);
     }
@@ -113,12 +108,12 @@ fn to_response_variant(
     resp: &Response,
     refs: &ReferenceableAPI,
     types: &mut TypeSpace,
-    variant_ident: syn::Ident,
-    struct_name: String,
+    variant_ident: &syn::Ident,
+    struct_name: &str,
 ) -> syn::Variant {
     let content = &resp.content;
 
-    let ty = content_to_tokens(refs, types, content, &struct_name);
+    let ty = content_to_tokens(refs, types, content, struct_name);
 
     let desc = &resp.description;
     parse_quote! {
@@ -131,7 +126,7 @@ fn to_header_variant(
     resp: Response,
     refs: &ReferenceableAPI,
     types: &mut TypeSpace,
-    variant_ident: syn::Ident,
+    variant_ident: &syn::Ident,
     header_name: String,
 ) -> Option<syn::Variant> {
     let headers = &resp.headers;
