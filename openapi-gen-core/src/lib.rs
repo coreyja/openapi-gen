@@ -16,7 +16,7 @@ use openapiv3::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde_json::Value;
-use syn::{parse::Parser, parse_quote, Fields, ItemEnum, ItemMod, ItemStruct};
+use syn::{parse_quote, ItemEnum, ItemMod};
 
 pub use darling;
 pub use syn;

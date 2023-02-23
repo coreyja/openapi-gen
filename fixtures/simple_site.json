@@ -16,8 +16,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "foo": {
-                    "type": "string"
+                  "Foo": {
+                    "type": "string",
+                    "description": "Foo is to bar as red is to wine"
                   },
                   "bar": {
                     "type": "string"

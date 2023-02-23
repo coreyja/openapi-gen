@@ -15,6 +15,8 @@ darling = "0.14.2"
 Inflector = "0.11.4"
 indexmap = "1.9.2"
 regex = "1.7.1"
+typify = "0.0.10"
+schemars = "0.8.11"
 
 [dev-dependencies]
 prettyplease = "0.1.23"
