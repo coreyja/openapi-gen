@@ -40,11 +40,6 @@ impl AsRequestMod for Operation {
               #types_content
             }
         };
-        // let content = &mut request_mod.content.as_mut().unwrap().1;
-
-        // content.push(param_struct.into());
-        // content.push(headers_struct.into());
-        // content.push(path_struct.into());
 
         request_mod
     }

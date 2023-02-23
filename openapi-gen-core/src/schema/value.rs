@@ -73,6 +73,5 @@ pub(crate) fn type_for(types: &mut TypeSpace, value: &Value, name: &str) -> Toke
         .unwrap();
 
     let t = types.get_type(&tid).unwrap();
-    dbg!(&t);
     t.ident()
 }
